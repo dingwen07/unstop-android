@@ -1,0 +1,87 @@
+<resources>
+    <string name="app_name">Unstop</string>
+    <string name="tab_monitor">监控</string>
+    <string name="tab_apps">应用</string>
+    <string name="monitor_subtitle">清除所选 FCM 应用的 FLAG_STOPPED</string>
+    <string name="refresh">刷新</string>
+    <string name="periodic_unstop">定时解除停止</string>
+    <plurals name="periodic_schedule">
+        <item quantity="other">每 %1$s运行一次 · 已选择 %2$d 个软件包</item>
+    </plurals>
+    <string name="periodic_disabled">已停用 · 仍可手动解除停止</string>
+    <string name="unstop_now">立即解除停止</string>
+    <plurals name="selected_apps_stopped">
+        <item quantity="other">当前有 %d 个所选应用处于停止状态</item>
+    </plurals>
+    <string name="unstopping">正在解除停止…</string>
+    <string name="users_to_monitor">要包含的用户</string>
+    <string name="users_to_monitor_description">选择要扫描的 Android 用户和配置文件。软件包选择适用于所有受监控用户。</string>
+    <string name="refresh_users">刷新用户</string>
+    <string name="enabled">已启用</string>
+    <string name="disabled">已停用</string>
+    <string name="last_check_time">上次检查：%1$s</string>
+    <string name="diagnostics_log">诊断日志</string>
+    <string name="package_logs">软件包日志</string>
+    <string name="no_package_log_files">没有软件包日志文件</string>
+    <string name="no_package_activity">本次启动尚未解除任何软件包的停止状态。</string>
+    <string name="view">查看</string>
+    <string name="diagnostics">诊断</string>
+    <string name="back">返回</string>
+    <string name="close">关闭</string>
+    <string name="refresh_log">刷新日志</string>
+    <string name="no_log_files">没有日志文件</string>
+    <plurals name="log_file_count">
+        <item quantity="other">%d 个文件</item>
+    </plurals>
+    <string name="no_diagnostics">尚未记录诊断信息。</string>
+    <string name="delete">删除</string>
+    <string name="unstop_diagnostics">Unstop 诊断</string>
+    <string name="copy_selected">复制所选日志</string>
+    <string name="shizuku_ready">Shizuku 已就绪</string>
+    <string name="shizuku_ready_description">已获得执行 Package Manager 命令的 Shell 权限</string>
+    <string name="shizuku_permission_required">需要 Shizuku 权限</string>
+    <string name="shizuku_permission_description">请在 Shizuku 中授予 Unstop 权限</string>
+    <string name="shizuku_not_running">Shizuku 未运行</string>
+    <string name="shizuku_not_running_description">启动 Shizuku 以扫描用户和软件包状态</string>
+    <string name="shizuku_unavailable">Shizuku 不可用</string>
+    <string name="shizuku_unavailable_description">检查 Shizuku 后刷新此状态</string>
+    <string name="open">打开</string>
+    <string name="grant">授权</string>
+    <string name="refresh_shizuku_status">刷新 Shizuku 状态</string>
+    <string name="check_interval">检查间隔</string>
+    <plurals name="minutes">
+        <item quantity="other">%d 分钟</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="other">%d 小时</item>
+    </plurals>
+    <string name="fcm_apps">FCM 应用</string>
+    <string name="fcm_apps_subtitle">一个软件包选择适用于所有受监控用户</string>
+    <string name="refresh_apps">刷新应用</string>
+    <string name="search_apps">搜索应用名称或软件包名</string>
+    <string name="clear_search">清除搜索</string>
+    <string name="no_search_results">没有符合搜索条件的 FCM 应用</string>
+    <string name="selected">已选择</string>
+    <string name="available_fcm_apps">可用的 FCM 应用</string>
+    <string name="other_fcm_apps">其他 FCM 应用</string>
+    <string name="section_count">%1$s · %2$d</string>
+    <string name="no_monitored_instance">受监控用户中未安装此应用</string>
+    <string name="flag_stopped_set">已设置 FLAG_STOPPED</string>
+    <string name="not_stopped">未停止</string>
+    <string name="no_fcm_packages">未找到 FCM 接收器软件包</string>
+    <string name="no_fcm_packages_description">声明了 com.google.android.c2dm.intent.RECEIVE 接收器的软件包会显示在这里。添加或启用 Android 用户后请刷新。</string>
+    <string name="owner">机主</string>
+    <string name="user_fallback">用户 %d</string>
+    <string name="user_label_format">%1$s（用户 %2$d）</string>
+    <string name="last_run_none">尚未运行解除停止检查</string>
+    <string name="summary_shizuku_not_running">Shizuku 未运行</string>
+    <string name="summary_shizuku_permission">需要 Shizuku 权限</string>
+    <string name="summary_shizuku_failed_detail">Shizuku 命令失败：%s</string>
+    <string name="summary_shizuku_failed">无法完成 Shizuku 命令</string>
+    <string name="summary_no_apps_selected">尚未选择 FCM 应用</string>
+    <plurals name="summary_unstopped">
+        <item quantity="other">已解除 %d 个所选应用的停止状态</item>
+    </plurals>
+    <string name="summary_none_stopped">没有处于停止状态的所选 FCM 应用</string>
+    <string name="summary_some_failed">部分所选软件包的解除停止命令失败</string>
+</resources>

@@ -1,0 +1,93 @@
+<resources>
+    <string name="app_name">Unstop</string>
+    <string name="tab_monitor">Monitor</string>
+    <string name="tab_apps">Apps</string>
+    <string name="monitor_subtitle">Clear FLAG_STOPPED for selected FCM apps</string>
+    <string name="refresh">Refresh</string>
+    <string name="periodic_unstop">Periodic unstop</string>
+    <plurals name="periodic_schedule">
+        <item quantity="one">Runs every %1$s · %2$d selected package</item>
+        <item quantity="other">Runs every %1$s · %2$d selected packages</item>
+    </plurals>
+    <string name="periodic_disabled">Disabled · manual unstop remains available</string>
+    <string name="unstop_now">Unstop now</string>
+    <plurals name="selected_apps_stopped">
+        <item quantity="one">%d selected app currently stopped</item>
+        <item quantity="other">%d selected apps currently stopped</item>
+    </plurals>
+    <string name="unstopping">Unstopping…</string>
+    <string name="users_to_monitor">Users to include</string>
+    <string name="users_to_monitor_description">Choose Android users and profiles to scan. Package selection applies to every monitored user.</string>
+    <string name="refresh_users">Refresh users</string>
+    <string name="enabled">Enabled</string>
+    <string name="disabled">Disabled</string>
+    <string name="last_check_time">Last check %1$s</string>
+    <string name="diagnostics_log">Diagnostics log</string>
+    <string name="package_logs">Package logs</string>
+    <string name="no_package_log_files">No package log files</string>
+    <string name="no_package_activity">No packages were unstopped in this launch.</string>
+    <string name="view">View</string>
+    <string name="diagnostics">Diagnostics</string>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+    <string name="refresh_log">Refresh log</string>
+    <string name="no_log_files">No log files</string>
+    <plurals name="log_file_count">
+        <item quantity="one">%d file</item>
+        <item quantity="other">%d files</item>
+    </plurals>
+    <string name="no_diagnostics">No diagnostics have been recorded.</string>
+    <string name="delete">Delete</string>
+    <string name="unstop_diagnostics">Unstop diagnostics</string>
+    <string name="copy_selected">Copy selected</string>
+    <string name="shizuku_ready">Shizuku ready</string>
+    <string name="shizuku_ready_description">Shell access granted for Package Manager commands</string>
+    <string name="shizuku_permission_required">Shizuku permission required</string>
+    <string name="shizuku_permission_description">Grant Unstop permission in Shizuku</string>
+    <string name="shizuku_not_running">Shizuku not running</string>
+    <string name="shizuku_not_running_description">Start Shizuku to scan users and package state</string>
+    <string name="shizuku_unavailable">Shizuku unavailable</string>
+    <string name="shizuku_unavailable_description">Check Shizuku and refresh this status</string>
+    <string name="open">Open</string>
+    <string name="grant">Grant</string>
+    <string name="refresh_shizuku_status">Refresh Shizuku status</string>
+    <string name="check_interval">Check interval</string>
+    <plurals name="minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <string name="fcm_apps">FCM apps</string>
+    <string name="fcm_apps_subtitle">One package selection applies to every monitored user</string>
+    <string name="refresh_apps">Refresh apps</string>
+    <string name="search_apps">Search labels or package names</string>
+    <string name="clear_search">Clear search</string>
+    <string name="no_search_results">No FCM apps match your search</string>
+    <string name="selected">Selected</string>
+    <string name="available_fcm_apps">Available FCM apps</string>
+    <string name="other_fcm_apps">Other FCM apps</string>
+    <string name="section_count">%1$s · %2$d</string>
+    <string name="no_monitored_instance">No installed instance in a monitored user</string>
+    <string name="flag_stopped_set">FLAG_STOPPED is set</string>
+    <string name="not_stopped">Not stopped</string>
+    <string name="no_fcm_packages">No FCM receiver packages found</string>
+    <string name="no_fcm_packages_description">Packages appear here when they declare a com.google.android.c2dm.intent.RECEIVE receiver. Refresh after adding or enabling an Android user.</string>
+    <string name="owner">Owner</string>
+    <string name="user_fallback">User %d</string>
+    <string name="user_label_format">%1$s (user %2$d)</string>
+    <string name="last_run_none">No unstop check has run yet</string>
+    <string name="summary_shizuku_not_running">Shizuku is not running</string>
+    <string name="summary_shizuku_permission">Shizuku permission is required</string>
+    <string name="summary_shizuku_failed_detail">Shizuku command failed: %s</string>
+    <string name="summary_shizuku_failed">The Shizuku command could not be completed</string>
+    <string name="summary_no_apps_selected">No FCM apps are selected</string>
+    <plurals name="summary_unstopped">
+        <item quantity="one">Unstopped %d selected app</item>
+        <item quantity="other">Unstopped %d selected apps</item>
+    </plurals>
+    <string name="summary_none_stopped">No selected FCM apps were stopped</string>
+    <string name="summary_some_failed">Some selected-package unstop commands failed</string>
+</resources>
