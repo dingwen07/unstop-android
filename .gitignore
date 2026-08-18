@@ -5,6 +5,7 @@
 *.apk
 *.aab
 *.ap_
+/app/release/
 
 # Java/Android generated files
 *.class
