@@ -1,7 +1,6 @@
 package net.extrawdw.apps.unstop
 
 import android.content.Context
-import androidx.annotation.Keep
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.system.exitProcess
@@ -10,10 +9,8 @@ import kotlin.system.exitProcess
  * Short-lived privileged endpoint. It is started only for a scan/run and is unbound immediately;
  * the target FCM packages are never launched.
  */
-@Keep
 class UnstopUserService() : IUnstopService.Stub() {
     /** Shizuku API 13 prefers this constructor when reflectively creating a UserService. */
-    @Keep
     constructor(@Suppress("UNUSED_PARAMETER") context: Context) : this()
 
     override fun runShell(script: String): Int {

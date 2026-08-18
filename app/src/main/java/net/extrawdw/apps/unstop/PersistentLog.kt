@@ -91,6 +91,23 @@ internal object PersistentLog {
         true
     }
 
+    /** Deletes every diagnostics file while keeping later writes in a fresh part file. */
+    fun deleteAll(context: Context): Int = synchronized(lock) {
+        val directory = logDirectory(context)
+        val currentFileName = sessionFile(directory).name
+        val targets = directory.listFiles().orEmpty().filter(File::isFile)
+        var deletedCount = 0
+        var deletedCurrentFile = false
+        targets.forEach { target ->
+            if (target.delete()) {
+                deletedCount++
+                if (target.name == currentFileName) deletedCurrentFile = true
+            }
+        }
+        if (deletedCurrentFile) sessionPart++
+        deletedCount
+    }
+
     private fun append(
         context: Context,
         level: String,

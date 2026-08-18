@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" fill="none">
+  <!-- Open, regular octagonal loop. -->
+  <path
+    d="M64.2 31L61.5 28.5H41.6L23.8 46.8V68.4L41.6 85H62.6L79.7 68.4V47.2"
+    stroke="#6750A4"
+    stroke-width="9"
+    stroke-linecap="round"
+    stroke-linejoin="round" />
+  <!-- Arrow is deliberately separate from the loop. -->
+  <path
+    d="M64.9 45.8L87.5 23.6"
+    stroke="#6750A4"
+    stroke-width="9.2"
+    stroke-linecap="butt" />
+  <path
+    d="M74.6 21.1H89.5V35.4"
+    stroke="#6750A4"
+    stroke-width="7.8"
+    stroke-linecap="round"
+    stroke-linejoin="round" />
+</svg>

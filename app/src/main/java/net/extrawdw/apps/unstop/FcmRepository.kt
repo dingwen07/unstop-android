@@ -9,6 +9,7 @@ import android.content.pm.ResolveInfo
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.drawable.Drawable
+import androidx.core.graphics.createBitmap
 
 internal data class UserOption(
     val id: Int,
@@ -223,7 +224,7 @@ internal object FcmRepository {
         value.matches(Regex("[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*"))
 
     private fun Drawable.toBitmap(size: Int): Bitmap {
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(size, size)
         setBounds(0, 0, size, size)
         draw(Canvas(bitmap))
         return bitmap

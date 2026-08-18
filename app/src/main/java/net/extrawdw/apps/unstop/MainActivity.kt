@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,6 +39,7 @@ import androidx.compose.material.icons.outlined.Apps
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
@@ -54,6 +56,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -75,6 +78,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -190,7 +194,7 @@ private fun MonitorScreen(
     var refreshVersion by remember { mutableIntStateOf(0) }
     var isRunning by remember { mutableStateOf(false) }
     var lastRunSummary by remember { mutableStateOf(UnstopStore.lastRunSummary(context)) }
-    var lastRunAt by remember { mutableStateOf(UnstopStore.lastRunAt(context)) }
+    var lastRunAt by remember { mutableLongStateOf(UnstopStore.lastRunAt(context)) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(monitorUsers, refreshVersion) {
@@ -502,6 +506,7 @@ private fun PackageActivityScreen(onBack: () -> Unit) {
             PackageActivityLog.snapshot(context, selectedFileName)
         },
         deleteSelected = { fileName -> PackageActivityLog.delete(context, fileName) },
+        deleteAll = { PackageActivityLog.deleteAll(context) },
         onBack = onBack,
     )
 }
@@ -519,6 +524,7 @@ private fun DiagnosticsScreen(onBack: () -> Unit) {
             PersistentLog.snapshot(context, selectedFileName)
         },
         deleteSelected = { fileName -> PersistentLog.delete(context, fileName) },
+        deleteAll = { PersistentLog.deleteAll(context) },
         onBack = onBack,
     )
 }
@@ -532,6 +538,7 @@ private fun LogViewer(
     @StringRes clipboardLabelRes: Int,
     snapshotProvider: (String?) -> PersistentLogSnapshot,
     deleteSelected: (String) -> Boolean,
+    deleteAll: () -> Int,
     onBack: () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -540,6 +547,7 @@ private fun LogViewer(
         mutableStateOf(PersistentLogSnapshot(emptyList(), selectedFile = null, text = ""))
     }
     var filesExpanded by remember { mutableStateOf(false) }
+    var showDeleteAllConfirmation by remember { mutableStateOf(false) }
 
     fun load(selectedFileName: String? = snapshot.selectedFile?.name) {
         scope.launch {
@@ -558,6 +566,16 @@ private fun LogViewer(
         scope.launch {
             snapshot = withContext(Dispatchers.IO) {
                 deleteSelected(selectedFileName)
+                snapshotProvider(null)
+            }
+        }
+    }
+
+    fun deleteAllFiles() {
+        showDeleteAllConfirmation = false
+        scope.launch {
+            snapshot = withContext(Dispatchers.IO) {
+                deleteAll()
                 snapshotProvider(null)
             }
         }
@@ -583,6 +601,20 @@ private fun LogViewer(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.weight(1f),
                 )
+                IconButton(
+                    onClick = { showDeleteAllConfirmation = true },
+                    enabled = snapshot.files.isNotEmpty(),
+                ) {
+                    Icon(
+                        Icons.Outlined.DeleteSweep,
+                        contentDescription = stringResource(R.string.delete_all_logs),
+                        tint = if (snapshot.files.isNotEmpty()) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        },
+                    )
+                }
                 IconButton(onClick = { load() }) {
                     Icon(
                         Icons.Outlined.Refresh,
@@ -603,6 +635,27 @@ private fun LogViewer(
             )
         }
     }
+
+    if (showDeleteAllConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteAllConfirmation = false },
+            title = { Text(stringResource(R.string.delete_all_logs_title)) },
+            text = { Text(stringResource(R.string.delete_all_logs_message)) },
+            confirmButton = {
+                TextButton(onClick = ::deleteAllFiles) {
+                    Text(
+                        stringResource(R.string.delete_all),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteAllConfirmation = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -618,6 +671,8 @@ private fun LogViewerContent(
     @StringRes clipboardLabelRes: Int,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val clipboardLabel = snapshot.selectedFile?.name ?: stringResource(clipboardLabelRes)
+    val fileMenuScrollState = rememberScrollState()
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -646,6 +701,8 @@ private fun LogViewerContent(
                 DropdownMenu(
                     expanded = filesExpanded,
                     onDismissRequest = { onFilesExpandedChange(false) },
+                    modifier = Modifier.heightIn(max = 320.dp),
+                    scrollState = fileMenuScrollState,
                 ) {
                     snapshot.files.forEach { file ->
                         DropdownMenuItem(
@@ -719,7 +776,7 @@ private fun LogViewerContent(
                 onClick = {
                     context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(
                         ClipData.newPlainText(
-                            snapshot.selectedFile?.name ?: context.getString(clipboardLabelRes),
+                            clipboardLabel,
                             snapshot.text,
                         ),
                     )
@@ -926,7 +983,7 @@ private fun AppsScreen(reloadVersion: Int) {
                 ) {
                     if (enabledApps.isNotEmpty()) {
                         item(key = "enabled-header") {
-                            SectionHeader(stringResource(R.string.selected), enabledApps.size)
+                            SectionHeader(stringResource(R.string.selected_apps), enabledApps.size)
                         }
                         items(enabledApps, key = { it.packageName }) { app ->
                             FcmAppRow(

@@ -1,6 +1,7 @@
 package net.extrawdw.apps.unstop
 
 import android.content.Context
+import androidx.core.content.edit
 
 /** Small, synchronous preference store shared by the UI and the alarm receiver. */
 internal object UnstopStore {
@@ -29,7 +30,7 @@ internal object UnstopStore {
         val users = monitorUsers(context).toMutableSet().apply {
             if (enabled) add(userId) else remove(userId)
         }
-        prefs(context).edit().putString(KEY_USERS, users.sorted().joinToString(",")).apply()
+        prefs(context).edit { putString(KEY_USERS, users.sorted().joinToString(",")) }
         PersistentLog.info(
             context,
             "Settings",
@@ -45,7 +46,7 @@ internal object UnstopStore {
         val apps = enabledAppPackages(context).toMutableSet().apply {
             if (enabled) add(packageName) else remove(packageName)
         }
-        prefs(context).edit().putStringSet(KEY_APPS, apps).apply()
+        prefs(context).edit { putStringSet(KEY_APPS, apps) }
         PersistentLog.info(
             context,
             "Settings",
@@ -58,7 +59,7 @@ internal object UnstopStore {
         val stored = prefs(context).getStringSet(KEY_APPS, emptySet()).orEmpty().toSet()
         val normalized = stored.mapNotNull(::packageNameFromStoredValue).toSet()
         if (normalized != stored) {
-            prefs(context).edit().putStringSet(KEY_APPS, normalized).apply()
+            prefs(context).edit { putStringSet(KEY_APPS, normalized) }
         }
         return normalized
     }
@@ -71,9 +72,7 @@ internal object UnstopStore {
     fun setIntervalMinutes(context: Context, minutes: Int) {
         val normalized = minutes.takeIf { it in INTERVAL_OPTIONS_MINUTES }
             ?: DEFAULT_INTERVAL_MINUTES
-        prefs(context).edit()
-            .putInt(KEY_INTERVAL_MINUTES, normalized)
-            .apply()
+        prefs(context).edit { putInt(KEY_INTERVAL_MINUTES, normalized) }
         PersistentLog.info(context, "Settings", "Check interval changed to $normalized minutes")
     }
 
@@ -81,7 +80,7 @@ internal object UnstopStore {
         prefs(context).getBoolean(KEY_PERIODIC_ENABLED, true)
 
     fun setPeriodicEnabled(context: Context, enabled: Boolean) {
-        prefs(context).edit().putBoolean(KEY_PERIODIC_ENABLED, enabled).apply()
+        prefs(context).edit { putBoolean(KEY_PERIODIC_ENABLED, enabled) }
         PersistentLog.info(
             context,
             "Settings",
@@ -96,10 +95,10 @@ internal object UnstopStore {
             ?: context.getString(R.string.last_run_none)
 
     fun saveLastRun(context: Context, timestamp: Long, summary: String) {
-        prefs(context).edit()
-            .putLong(KEY_LAST_RUN_AT, timestamp)
-            .putString(KEY_LAST_RUN_SUMMARY, summary)
-            .apply()
+        prefs(context).edit {
+            putLong(KEY_LAST_RUN_AT, timestamp)
+            putString(KEY_LAST_RUN_SUMMARY, summary)
+        }
     }
 
     private fun packageNameFromStoredValue(value: String): String? {

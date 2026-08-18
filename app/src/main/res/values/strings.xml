@@ -28,8 +28,6 @@
     <string name="no_package_activity">No packages were unstopped in this launch.</string>
     <string name="view">View</string>
     <string name="diagnostics">Diagnostics</string>
-    <string name="back">Back</string>
-    <string name="close">Close</string>
     <string name="refresh_log">Refresh log</string>
     <string name="no_log_files">No log files</string>
     <plurals name="log_file_count">
@@ -38,6 +36,11 @@
     </plurals>
     <string name="no_diagnostics">No diagnostics have been recorded.</string>
     <string name="delete">Delete</string>
+    <string name="delete_all">Delete all</string>
+    <string name="delete_all_logs">Delete all log files</string>
+    <string name="delete_all_logs_title">Delete all log files?</string>
+    <string name="delete_all_logs_message">All log files shown here will be permanently deleted.</string>
+    <string name="cancel">Cancel</string>
     <string name="unstop_diagnostics">Unstop diagnostics</string>
     <string name="copy_selected">Copy selected</string>
     <string name="shizuku_ready">Shizuku ready</string>
@@ -66,7 +69,7 @@
     <string name="search_apps">Search labels or package names</string>
     <string name="clear_search">Clear search</string>
     <string name="no_search_results">No FCM apps match your search</string>
-    <string name="selected">Selected</string>
+    <string name="selected_apps">Selected</string>
     <string name="available_fcm_apps">Available FCM apps</string>
     <string name="other_fcm_apps">Other FCM apps</string>
     <string name="section_count">%1$s · %2$d</string>
@@ -88,6 +91,6 @@
         <item quantity="one">Unstopped %d selected app</item>
         <item quantity="other">Unstopped %d selected apps</item>
     </plurals>
-    <string name="summary_none_stopped">No selected FCM apps were stopped</string>
-    <string name="summary_some_failed">Some selected-package unstop commands failed</string>
+    <string name="summary_none_stopped">No FCM apps were stopped</string>
+    <string name="summary_some_failed">Some unstop commands failed</string>
 </resources>

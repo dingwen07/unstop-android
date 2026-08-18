@@ -78,6 +78,24 @@ internal object PackageActivityLog {
         true
     }
 
+    /** Deletes every package activity file while keeping later writes in a fresh part file. */
+    fun deleteAll(context: Context): Int = synchronized(lock) {
+        val directory = logDirectory(context)
+        val currentFileName = currentFile(directory).name
+        val targets = directory.listFiles().orEmpty()
+            .filter { it.isFile && it.name.startsWith("packages-") && it.extension == "log" }
+        var deletedCount = 0
+        var deletedCurrentFile = false
+        targets.forEach { target ->
+            if (target.delete()) {
+                deletedCount++
+                if (target.name == currentFileName) deletedCurrentFile = true
+            }
+        }
+        if (deletedCurrentFile) activePart++
+        deletedCount
+    }
+
     private fun currentFile(directory: File): File {
         val sessionId = PersistentLog.currentSessionId()
         if (sessionId != activeSessionId) {
