@@ -13,7 +13,7 @@ internal data class LastRunState(
     val summary: String,
 )
 
-/** Small, synchronous preference store shared by the UI and the alarm receiver. */
+/** Small, synchronous preference store shared by the UI and background workers. */
 internal object UnstopStore {
     val INTERVAL_OPTIONS_MINUTES = listOf(15, 30, 60, 2 * 60, 3 * 60)
     private const val DEFAULT_INTERVAL_MINUTES = 30

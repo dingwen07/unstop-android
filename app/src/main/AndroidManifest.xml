@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <queries>
         <!-- FCM clients expose this broadcast receiver intent through their merged manifest. This
@@ -47,12 +48,13 @@
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
 
         <receiver
-            android:name=".UnstopAlarmReceiver"
+            android:name=".UnstopLifecycleReceiver"
             android:enabled="true"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="net.extrawdw.apps.unstop.ACTION_PERIODIC_UNSTOP" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="net.extrawdw.apps.unstop.ACTION_NETWORK_AVAILABLE" />
             </intent-filter>
         </receiver>
     </application>

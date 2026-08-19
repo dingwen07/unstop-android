@@ -107,9 +107,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        PersistentLog.startNewSession()
-        PersistentLog.info(this, "App", "MainActivity created; verifying periodic alarm")
-        UnstopScheduler.ensureScheduled(this)
+        PersistentLog.info(this, "App", "MainActivity created; verifying background work")
+        UnstopWorkScheduler.ensureScheduled(
+            this,
+            source = "app_start",
+            forceNetworkRegistration = true,
+        )
         setContent {
             UnstopTheme {
                 UnstopApp()
@@ -314,7 +317,10 @@ private fun MonitorScreen(
                                     onCheckedChange = {
                                         periodicEnabled = it
                                         UnstopStore.setPeriodicEnabled(context, it)
-                                        UnstopScheduler.schedule(context)
+                                        UnstopWorkScheduler.updateScheduled(
+                                            context,
+                                            source = "periodic_setting_changed",
+                                        )
                                     },
                                 )
                             },
@@ -324,7 +330,10 @@ private fun MonitorScreen(
                             onMinutesChanged = {
                                 intervalMinutes = it
                                 UnstopStore.setIntervalMinutes(context, it)
-                                UnstopScheduler.schedule(context)
+                                UnstopWorkScheduler.updateScheduled(
+                                    context,
+                                    source = "interval_changed",
+                                )
                             },
                         )
                     }

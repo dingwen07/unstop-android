@@ -23,9 +23,9 @@ internal data class PersistentLogSnapshot(
 /**
  * File-based diagnostics retained across process death and device restarts.
  *
- * Each Android process launch writes to a new session file. Long sessions can continue in another
- * part file, while global file-count and byte limits keep storage use bounded. Files live in
- * no-backup storage and are removed only by retention, explicit clearing, or app uninstall.
+ * Each Android process writes to one session file. Long processes can continue in another part
+ * file, while global file-count and byte limits keep storage use bounded. Files live in no-backup
+ * storage and are removed only by retention, explicit clearing, or app uninstall.
  */
 internal object PersistentLog {
     private const val LOGCAT_TAG = "Unstop"
@@ -42,18 +42,10 @@ internal object PersistentLog {
         "uuuuMMdd-HHmmss-SSS",
         Locale.US,
     )
-    private var sessionSequence = 0
     private var sessionStem = newSessionStem()
     private var sessionPart = 1
 
-    /** Starts a distinct file even when a new Activity launch reuses the existing app process. */
-    fun startNewSession() = synchronized(lock) {
-        sessionSequence++
-        sessionStem = newSessionStem()
-        sessionPart = 1
-    }
-
-    /** Shared identifier used by parallel per-launch log streams. */
+    /** Shared identifier used by parallel per-process log streams. */
     fun currentSessionId(): String = synchronized(lock) {
         sessionStem.removePrefix("unstop-")
     }
@@ -155,7 +147,7 @@ internal object PersistentLog {
     }
 
     private fun newSessionStem(): String =
-        "unstop-${OffsetDateTime.now().format(fileTimestampFormatter)}-p${Process.myPid()}-s$sessionSequence"
+        "unstop-${OffsetDateTime.now().format(fileTimestampFormatter)}-p${Process.myPid()}"
 
     private fun listFilesLocked(context: Context): List<PersistentLogFile> =
         logDirectory(context).listFiles().orEmpty()
