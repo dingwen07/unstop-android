@@ -1,38 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <!-- Adaptive icons expose roughly the central 72dp after masking. Keep the complete mark
-         within that area so the arrowhead and lower corners are not clipped by the launcher. -->
+    android:viewportWidth="1236"
+    android:viewportHeight="1236">
+    <!--
+        Geometry from external-link-purple-symmetric-v3-rounded-inner.svg.
+        The source octagonal frame is centered at (606.5, 663.5). Keep the
+        existing scale, but place that frame center at the adaptive-icon
+        foreground center (618, 618), rather than centering the arrow bounds.
+    -->
     <group
-        android:pivotX="54"
-        android:pivotY="54"
-        android:scaleX="0.67"
-        android:scaleY="0.67">
-        <!-- Regular open octagon, with the upper-right side reserved for the arrow. -->
+        android:pivotX="606.5"
+        android:pivotY="663.5"
+        android:scaleX="0.57"
+        android:scaleY="0.57"
+        android:translateX="11.5"
+        android:translateY="-45.5">
+        <!-- Open octagonal frame with rounded inner turns. -->
         <path
-            android:fillColor="#00000000"
-            android:pathData="M64.2,31 L61.5,28.5 H41.6 L23.8,46.8 V68.4 L41.6,85 H62.6 L79.7,68.4 V47.2"
-            android:strokeColor="#6750A4"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round"
-            android:strokeWidth="9" />
-        <!-- Detached up-right arrow: square-ended shaft and rounded L-shaped head. -->
+            android:pathData="M480,290 A52.0052,52.0052 0 0 0 443.23047,305.23047 L248.23047,500.23047 A52.0052,52.0052 0 0 0 233,537 V790 A52.0052,52.0052 0 0 0 248.23047,826.76953 L443.23047,1021.76953 A52.0052,52.0052 0 0 0 480,1037 H733 A52.0052,52.0052 0 0 0 769.76953,1021.76953 L964.76953,826.76953 A52.0052,52.0052 0 0 0 980,790 V550 A52.0052,52.0052 0 0 0 964.76953,513.23047 L941.74023,490.20117 L868.20117,563.74023 L869.63604,565.17510 Q876,571.53906 876,580.53906 L876,746.46094 Q876,768.46094 860.44365,784.01729 L727.01729,917.44365 Q711.46094,933 689.46094,933 H523.53906 Q501.53906,933 485.98271,917.44365 L352.55635,784.01729 Q337,768.46094 337,746.46094 L337,580.53906 Q337,558.53906 352.55635,542.98271 L485.98271,409.55635 Q501.53906,394 523.53906,394 H689.46094 Q698.46094,394 704.82490,400.36396 L706.25977,401.79883 L779.79883,328.25977 L756.76953,305.23047 A52.0052,52.0052 0 0 0 720,290 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="223"
+                    android:startY="1047"
+                    android:endX="1070"
+                    android:endY="200">
+                    <item android:color="#644FA6" android:offset="0" />
+                    <item android:color="#6550A7" android:offset="0.5" />
+                    <item android:color="#6651A7" android:offset="1" />
+                </gradient>
+            </aapt:attr>
+        </path>
+
+        <!-- Upper break cap. -->
+        <group
+            android:pivotX="760"
+            android:pivotY="382"
+            android:rotation="45">
+            <path android:pathData="M734,330 L753,330 Q760,330 760,337 L760,418 Q760,434 744,434 L734,434 Z">
+                <aapt:attr name="android:fillColor">
+                    <gradient
+                        android:type="linear"
+                        android:startX="223"
+                        android:startY="1047"
+                        android:endX="1070"
+                        android:endY="200">
+                        <item android:color="#644FA6" android:offset="0" />
+                        <item android:color="#6550A7" android:offset="0.5" />
+                        <item android:color="#6651A7" android:offset="1" />
+                    </gradient>
+                </aapt:attr>
+            </path>
+        </group>
+
+        <!-- Reflected lower break cap. -->
+        <group
+            android:translateX="1270"
+            android:translateY="1270"
+            android:pivotX="0"
+            android:pivotY="0"
+            android:rotation="90">
+            <group
+                android:pivotX="0"
+                android:pivotY="0"
+                android:scaleX="-1"
+                android:scaleY="1">
+                <group
+                android:pivotX="760"
+                android:pivotY="382"
+                android:rotation="45">
+                <path android:pathData="M734,330 L753,330 Q760,330 760,337 L760,418 Q760,434 744,434 L734,434 Z">
+                    <aapt:attr name="android:fillColor">
+                        <gradient
+                            android:type="linear"
+                            android:startX="223"
+                            android:startY="1047"
+                            android:endX="1070"
+                            android:endY="200">
+                            <item android:color="#644FA6" android:offset="0" />
+                            <item android:color="#6550A7" android:offset="0.5" />
+                            <item android:color="#6651A7" android:offset="1" />
+                        </gradient>
+                    </aapt:attr>
+                </path>
+            </group>
+            </group>
+        </group>
+
+        <!-- Detached external-link arrow. -->
         <path
-            android:fillColor="#00000000"
-            android:pathData="M64.9,45.8 L87.5,23.6"
-            android:strokeColor="#6750A4"
-            android:strokeLineCap="butt"
-            android:strokeLineJoin="round"
-            android:strokeWidth="9.2" />
-        <path
-            android:fillColor="#00000000"
-            android:pathData="M74.6,21.1 H89.5 V35.4"
-            android:strokeColor="#6750A4"
-            android:strokeLineCap="round"
-            android:strokeLineJoin="round"
-            android:strokeWidth="7.8" />
+            android:pathData="M788.513,555.309 Q781.088,562.734 773.664,555.309 L714.691,496.336 Q707.266,488.912 714.691,481.487 L743.50,452.90 L766.50,430.52 L773.50,423.43 L776.74,420.50 L790.88,406.50 L797.50,399.72 L801.50,395.97 L818.50,378.99 L823.50,374.29 L836.50,361.38 L851.50,346.80 L861.50,336.74 L872.04,326.50 L908.42,290.50 L909.87,288.50 L910.30,286.50 L910.22,284.50 L909.87,283.50 L908.50,281.98 L907.50,281.27 L906.50,280.97 L878.50,280.78 L852.50,280.93 L847.50,280.74 L841.50,279.90 L836.50,278.55 L832.50,277.03 L829.50,275.61 L825.50,273.06 L822.50,270.68 L820.50,268.88 L817.46,265.50 L814.41,261.50 L813.16,259.50 L811.18,255.50 L810.10,252.50 L809.08,248.50 L808.29,243.50 L808.20,239.50 L808.49,235.50 L809.29,230.50 L810.13,227.50 L812.06,222.50 L814.17,218.50 L815.50,216.66 L819.50,212.05 L822.50,209.22 L826.50,206.20 L829.50,204.41 L834.50,202.20 L837.50,201.25 L842.50,200.08 L846.50,199.76 L864.50,199.64 L888.50,199.71 L891.50,199.60 L934.50,199.70 L941.50,199.55 L970.50,199.68 L1012.50,199.58 L1032.50,199.75 L1040.50,199.65 L1043.50,199.84 L1045.50,200.15 L1049.50,201.33 L1051.50,202.15 L1055.50,204.17 L1058.50,206.26 L1060.94,208.50 L1062.80,210.50 L1065.61,214.50 L1066.81,216.50 L1067.81,218.50 L1068.92,221.50 L1069.63,224.50 L1069.88,227.50 L1069.99,340.50 L1069.83,363.50 L1070.01,395.50 L1069.83,411.50 L1069.30,417.50 L1067.76,423.50 L1066.62,426.50 L1064.73,430.50 L1063.61,432.50 L1061.50,435.37 L1058.86,438.50 L1055.50,441.73 L1051.50,444.80 L1048.50,446.67 L1044.50,448.56 L1039.50,450.25 L1035.50,451.14 L1031.50,451.57 L1026.50,451.53 L1022.50,451.03 L1018.50,450.14 L1013.50,448.57 L1009.50,446.71 L1006.50,444.78 L1003.60,442.50 L999.30,438.50 L997.45,436.50 L995.50,434.01 L993.48,430.50 L991.34,425.50 L989.94,421.50 L988.85,416.50 L988.51,411.50 L988.52,402.50 L988.32,395.50 L988.32,373.50 L988.51,362.50 L987.50,361.74 L986.50,362.46 L961.50,386.87 L956.46,391.50 L944.27,403.50 L940.50,407.44 L927.89,419.50 L917.04,430.50 L910.50,436.54 L903.50,443.62 L869.50,476.47 L849.20,496.50 L838.67,506.50 L830.50,514.55 L821.50,522.97 L817.06,527.50 L810.67,533.50 L807.50,536.76 L794.16,549.50 L788.513,555.309 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="223"
+                    android:startY="1047"
+                    android:endX="1070"
+                    android:endY="200">
+                    <item android:color="#644FA6" android:offset="0" />
+                    <item android:color="#6550A7" android:offset="0.5" />
+                    <item android:color="#6651A7" android:offset="1" />
+                </gradient>
+            </aapt:attr>
+        </path>
     </group>
 </vector>

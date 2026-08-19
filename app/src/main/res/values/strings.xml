@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Unstop</string>
-    <string name="tab_monitor">Monitor</string>
+    <string name="tab_unstop" translatable="false">Unstop</string>
     <string name="tab_apps">Apps</string>
     <string name="monitor_subtitle">Clear FLAG_STOPPED for selected FCM apps</string>
     <string name="refresh">Refresh</string>
@@ -17,7 +17,7 @@
     </plurals>
     <string name="unstopping">Unstopping…</string>
     <string name="users_to_monitor">Users to include</string>
-    <string name="users_to_monitor_description">Choose Android users and profiles to scan. Package selection applies to every monitored user.</string>
+    <string name="users_to_monitor_description">Choose Android users and profiles to monitor.</string>
     <string name="refresh_users">Refresh users</string>
     <string name="enabled">Enabled</string>
     <string name="disabled">Disabled</string>
@@ -64,7 +64,7 @@
         <item quantity="other">%d hours</item>
     </plurals>
     <string name="fcm_apps">FCM apps</string>
-    <string name="fcm_apps_subtitle">One package selection applies to every monitored user</string>
+    <string name="fcm_apps_subtitle">Selection applies to every monitored user</string>
     <string name="refresh_apps">Refresh apps</string>
     <string name="search_apps">Search labels or package names</string>
     <string name="clear_search">Clear search</string>
@@ -74,8 +74,8 @@
     <string name="other_fcm_apps">Other FCM apps</string>
     <string name="section_count">%1$s · %2$d</string>
     <string name="no_monitored_instance">No installed instance in a monitored user</string>
-    <string name="flag_stopped_set">FLAG_STOPPED is set</string>
-    <string name="not_stopped">Not stopped</string>
+    <string name="flag_stopped">Stopped</string>
+    <string name="not_stopped">Normal</string>
     <string name="no_fcm_packages">No FCM receiver packages found</string>
     <string name="no_fcm_packages_description">Packages appear here when they declare a com.google.android.c2dm.intent.RECEIVE receiver. Refresh after adding or enabling an Android user.</string>
     <string name="owner">Owner</string>

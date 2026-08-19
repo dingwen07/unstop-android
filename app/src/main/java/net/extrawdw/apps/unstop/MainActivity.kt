@@ -9,9 +9,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +34,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -122,7 +126,7 @@ class MainActivity : ComponentActivity() {
 }
 
 private enum class AppTab(@param:StringRes val labelRes: Int) {
-    MONITOR(R.string.tab_monitor),
+    UNSTOP(R.string.tab_unstop),
     APPS(R.string.tab_apps),
 }
 
@@ -134,9 +138,34 @@ private enum class LogPage {
 @PreviewScreenSizes
 @Composable
 fun UnstopApp() {
-    var currentTab by rememberSaveable { mutableStateOf(AppTab.MONITOR) }
-    var appReloadVersion by remember { mutableIntStateOf(0) }
-    var logPage by rememberSaveable { mutableStateOf<LogPage?>(null) }
+    val pagerState = rememberPagerState(initialPage = AppTab.UNSTOP.ordinal) {
+        AppTab.entries.size
+    }
+    val scope = rememberCoroutineScope()
+    val composedTabs = rememberSaveable {
+        mutableIntStateOf(1 shl pagerState.currentPage)
+    }
+    val appReloadVersion = remember { mutableIntStateOf(0) }
+    val logPage = rememberSaveable { mutableStateOf<LogPage?>(null) }
+    val selectTab = remember(pagerState, scope) {
+        { tab: AppTab ->
+            composedTabs.intValue = composedTabs.intValue or (1 shl tab.ordinal)
+            scope.launch { pagerState.scrollToPage(tab.ordinal) }
+        }
+    }
+    val onUsersChanged = remember {
+        { appReloadVersion.intValue += 1 }
+    }
+    val onOpenPackageLogs = remember {
+        { logPage.value = LogPage.PACKAGES }
+    }
+    val onOpenDiagnostics = remember {
+        { logPage.value = LogPage.DIAGNOSTICS }
+    }
+    val onCloseLogPage = remember {
+        { logPage.value = null }
+    }
+    val currentTab = AppTab.entries[pagerState.currentPage]
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
@@ -144,12 +173,12 @@ fun UnstopApp() {
                 icon = {
                     Icon(
                         Icons.Outlined.Shield,
-                        contentDescription = stringResource(AppTab.MONITOR.labelRes),
+                        contentDescription = stringResource(AppTab.UNSTOP.labelRes),
                     )
                 },
-                label = { Text(stringResource(AppTab.MONITOR.labelRes)) },
-                selected = currentTab == AppTab.MONITOR,
-                onClick = { currentTab = AppTab.MONITOR },
+                label = { Text(stringResource(AppTab.UNSTOP.labelRes)) },
+                selected = currentTab == AppTab.UNSTOP,
+                onClick = { selectTab(AppTab.UNSTOP) },
             )
             item(
                 icon = {
@@ -160,23 +189,35 @@ fun UnstopApp() {
                 },
                 label = { Text(stringResource(AppTab.APPS.labelRes)) },
                 selected = currentTab == AppTab.APPS,
-                onClick = { currentTab = AppTab.APPS },
+                onClick = { selectTab(AppTab.APPS) },
             )
         },
     ) {
-        when (currentTab) {
-            AppTab.MONITOR -> MonitorScreen(
-                onUsersChanged = { appReloadVersion++ },
-                onOpenPackageLogs = { logPage = LogPage.PACKAGES },
-                onOpenDiagnostics = { logPage = LogPage.DIAGNOSTICS },
-            )
-            AppTab.APPS -> AppsScreen(reloadVersion = appReloadVersion)
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize(),
+            beyondViewportPageCount = AppTab.entries.lastIndex,
+            userScrollEnabled = false,
+            key = { AppTab.entries[it] },
+        ) { page ->
+            if (composedTabs.intValue and (1 shl page) == 0) {
+                Spacer(modifier = Modifier.fillMaxSize())
+            } else {
+                when (AppTab.entries[page]) {
+                    AppTab.UNSTOP -> MonitorScreen(
+                        onUsersChanged = onUsersChanged,
+                        onOpenPackageLogs = onOpenPackageLogs,
+                        onOpenDiagnostics = onOpenDiagnostics,
+                    )
+                    AppTab.APPS -> AppsScreen(reloadVersion = appReloadVersion.intValue)
+                }
+            }
         }
     }
 
-    when (logPage) {
-        LogPage.PACKAGES -> PackageActivityScreen(onBack = { logPage = null })
-        LogPage.DIAGNOSTICS -> DiagnosticsScreen(onBack = { logPage = null })
+    when (logPage.value) {
+        LogPage.PACKAGES -> PackageActivityScreen(onBack = onCloseLogPage)
+        LogPage.DIAGNOSTICS -> DiagnosticsScreen(onBack = onCloseLogPage)
         null -> Unit
     }
 }
@@ -901,7 +942,7 @@ private fun IntervalPicker(minutes: Int, onMinutesChanged: (Int) -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun AppsScreen(reloadVersion: Int) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -972,7 +1013,7 @@ private fun AppsScreen(reloadVersion: Int) {
                 onValueChange = { query = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp),
                 placeholder = { Text(stringResource(R.string.search_apps)) },
                 leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null) },
                 trailingIcon = {
@@ -1005,7 +1046,7 @@ private fun AppsScreen(reloadVersion: Int) {
                     contentPadding = PaddingValues(bottom = 24.dp),
                 ) {
                     if (enabledApps.isNotEmpty()) {
-                        item(key = "enabled-header") {
+                        stickyHeader(key = "enabled-header") {
                             SectionHeader(stringResource(R.string.selected_apps), enabledApps.size)
                         }
                         items(enabledApps, key = { it.packageName }) { app ->
@@ -1024,7 +1065,7 @@ private fun AppsScreen(reloadVersion: Int) {
                             )
                         }
                     }
-                    item(key = "all-header") {
+                    stickyHeader(key = "all-header") {
                         SectionHeader(
                             stringResource(
                                 if (enabledApps.isEmpty()) {
@@ -1102,7 +1143,7 @@ private fun FcmAppRow(
                 Text(
                     when {
                         !userMonitored -> stringResource(R.string.no_monitored_instance)
-                        app.stopped -> stringResource(R.string.flag_stopped_set)
+                        app.stopped -> stringResource(R.string.flag_stopped)
                         else -> stringResource(R.string.not_stopped)
                     },
                     color = if (userMonitored) MaterialTheme.colorScheme.onSurfaceVariant
@@ -1157,7 +1198,11 @@ private fun SectionHeader(title: String, count: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
-            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {}
+            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
     )
 }
 

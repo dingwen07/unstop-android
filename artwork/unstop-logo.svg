@@ -1,22 +1,234 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" fill="none">
-  <!-- Open, regular octagonal loop. -->
-  <path
-    d="M64.2 31L61.5 28.5H41.6L23.8 46.8V68.4L41.6 85H62.6L79.7 68.4V47.2"
-    stroke="#6750A4"
-    stroke-width="9"
-    stroke-linecap="round"
-    stroke-linejoin="round" />
-  <!-- Arrow is deliberately separate from the loop. -->
-  <path
-    d="M64.9 45.8L87.5 23.6"
-    stroke="#6750A4"
-    stroke-width="9.2"
-    stroke-linecap="butt" />
-  <path
-    d="M74.6 21.1H89.5V35.4"
-    stroke="#6750A4"
-    stroke-width="7.8"
-    stroke-linecap="round"
-    stroke-linejoin="round" />
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="1236" height="1236" viewBox="0 0 1236 1236"
+     role="img" aria-labelledby="title desc">
+  <title id="title">Symmetric purple external-link icon</title>
+  <desc id="desc">A purple external-link icon with a symmetric open octagonal frame, smoothly rounded inner octagon turns, original arrowhead geometry, lightly rounded arrow tail, and rounded break corners.</desc>
+
+  <defs>
+    <!-- The gradient is aligned with the x+y=1270 symmetry axis. -->
+    <linearGradient id="purple" gradientUnits="userSpaceOnUse"
+                    x1="223" y1="1047" x2="1070" y2="200">
+      <stop offset="0" stop-color="#644FA6"/>
+      <stop offset="0.5" stop-color="#6550A7"/>
+      <stop offset="1" stop-color="#6651A7"/>
+    </linearGradient>
+  </defs>
+
+  <!--
+    Frame outline. The outer contour preserves the original 104 px
+    round-joined stroke geometry. The inner octagonal contour is
+    converted to explicit geometry so each turn can be smoothly rounded.
+    The two break faces and their separate custom caps remain unchanged.
+  -->
+  <path fill="url(#purple)"
+        d="M 480,290
+           A 52.0052,52.0052 0 0 0 443.23047,305.23047
+           L 248.23047,500.23047
+           A 52.0052,52.0052 0 0 0 233,537
+           V 790
+           A 52.0052,52.0052 0 0 0 248.23047,826.76953
+           L 443.23047,1021.76953
+           A 52.0052,52.0052 0 0 0 480,1037
+           H 733
+           A 52.0052,52.0052 0 0 0 769.76953,1021.76953
+           L 964.76953,826.76953
+           A 52.0052,52.0052 0 0 0 980,790
+           V 550
+           A 52.0052,52.0052 0 0 0 964.76953,513.23047
+           L 941.74023,490.20117
+           L 868.20117,563.74023
+
+           L 869.63604,565.17510
+           Q 876,571.53906 876,580.53906
+           L 876,746.46094
+           Q 876,768.46094 860.44365,784.01729
+           L 727.01729,917.44365
+           Q 711.46094,933 689.46094,933
+           L 523.53906,933
+           Q 501.53906,933 485.98271,917.44365
+           L 352.55635,784.01729
+           Q 337,768.46094 337,746.46094
+           L 337,580.53906
+           Q 337,558.53906 352.55635,542.98271
+           L 485.98271,409.55635
+           Q 501.53906,394 523.53906,394
+           L 689.46094,394
+           Q 698.46094,394 704.82490,400.36396
+
+           L 706.25977,401.79883
+           L 779.79883,328.25977
+           L 756.76953,305.23047
+           A 52.0052,52.0052 0 0 0 720,290
+           Z"/>
+
+  <!--
+    Upper break cap. It stays flat at the break face, while preserving
+    the original-style stronger rounding on the inner-opening corner.
+  -->
+  <g transform="translate(760 382) rotate(45)" fill="url(#purple)">
+    <path d="M -26,-52
+             L -7,-52
+             Q 0,-52 0,-45
+             L 0,36
+             Q 0,52 -16,52
+             L -26,52 Z"/>
+  </g>
+
+  <!-- Exact reflected lower break cap. -->
+  <g transform="matrix(0 -1 -1 0 1270 1270)">
+    <g transform="translate(760 382) rotate(45)" fill="url(#purple)">
+      <path d="M -26,-52
+               L -7,-52
+               Q 0,-52 0,-45
+               L 0,36
+               Q 0,52 -16,52
+               L -26,52 Z"/>
+    </g>
+  </g>
+
+  <!--
+    Arrow: all geometry from the shaft onward, including the complete
+    arrowhead/tip, is retained verbatim from the original SVG.
+    Only the trailing cap is changed: its corner radius is modestly
+    increased (about 10.5 px), much smaller than the previous version.
+  -->
+  <path fill="url(#purple)"
+        d="M 788.513,555.309
+           Q 781.088,562.734 773.664,555.309
+           L 714.691,496.336
+           Q 707.266,488.912 714.691,481.487
+           L 743.50,452.90
+           L 766.50,430.52
+           L 773.50,423.43
+           L 776.74,420.50
+           L 790.88,406.50
+           L 797.50,399.72
+           L 801.50,395.97
+           L 818.50,378.99
+           L 823.50,374.29
+           L 836.50,361.38
+           L 851.50,346.80
+           L 861.50,336.74
+           L 872.04,326.50
+           L 908.42,290.50
+           L 909.87,288.50
+           L 910.30,286.50
+           L 910.22,284.50
+           L 909.87,283.50
+           L 908.50,281.98
+           L 907.50,281.27
+           L 906.50,280.97
+           L 878.50,280.78
+           L 852.50,280.93
+           L 847.50,280.74
+           L 841.50,279.90
+           L 836.50,278.55
+           L 832.50,277.03
+           L 829.50,275.61
+           L 825.50,273.06
+           L 822.50,270.68
+           L 820.50,268.88
+           L 817.46,265.50
+           L 814.41,261.50
+           L 813.16,259.50
+           L 811.18,255.50
+           L 810.10,252.50
+           L 809.08,248.50
+           L 808.29,243.50
+           L 808.20,239.50
+           L 808.49,235.50
+           L 809.29,230.50
+           L 810.13,227.50
+           L 812.06,222.50
+           L 814.17,218.50
+           L 815.50,216.66
+           L 819.50,212.05
+           L 822.50,209.22
+           L 826.50,206.20
+           L 829.50,204.41
+           L 834.50,202.20
+           L 837.50,201.25
+           L 842.50,200.08
+           L 846.50,199.76
+           L 864.50,199.64
+           L 888.50,199.71
+           L 891.50,199.60
+           L 934.50,199.70
+           L 941.50,199.55
+           L 970.50,199.68
+           L 1012.50,199.58
+           L 1032.50,199.75
+           L 1040.50,199.65
+           L 1043.50,199.84
+           L 1045.50,200.15
+           L 1049.50,201.33
+           L 1051.50,202.15
+           L 1055.50,204.17
+           L 1058.50,206.26
+           L 1060.94,208.50
+           L 1062.80,210.50
+           L 1065.61,214.50
+           L 1066.81,216.50
+           L 1067.81,218.50
+           L 1068.92,221.50
+           L 1069.63,224.50
+           L 1069.88,227.50
+           L 1069.99,340.50
+           L 1069.83,363.50
+           L 1070.01,395.50
+           L 1069.83,411.50
+           L 1069.30,417.50
+           L 1067.76,423.50
+           L 1066.62,426.50
+           L 1064.73,430.50
+           L 1063.61,432.50
+           L 1061.50,435.37
+           L 1058.86,438.50
+           L 1055.50,441.73
+           L 1051.50,444.80
+           L 1048.50,446.67
+           L 1044.50,448.56
+           L 1039.50,450.25
+           L 1035.50,451.14
+           L 1031.50,451.57
+           L 1026.50,451.53
+           L 1022.50,451.03
+           L 1018.50,450.14
+           L 1013.50,448.57
+           L 1009.50,446.71
+           L 1006.50,444.78
+           L 1003.60,442.50
+           L 999.30,438.50
+           L 997.45,436.50
+           L 995.50,434.01
+           L 993.48,430.50
+           L 991.34,425.50
+           L 989.94,421.50
+           L 988.85,416.50
+           L 988.51,411.50
+           L 988.52,402.50
+           L 988.32,395.50
+           L 988.32,373.50
+           L 988.51,362.50
+           L 987.50,361.74
+           L 986.50,362.46
+           L 961.50,386.87
+           L 956.46,391.50
+           L 944.27,403.50
+           L 940.50,407.44
+           L 927.89,419.50
+           L 917.04,430.50
+           L 910.50,436.54
+           L 903.50,443.62
+           L 869.50,476.47
+           L 849.20,496.50
+           L 838.67,506.50
+           L 830.50,514.55
+           L 821.50,522.97
+           L 817.06,527.50
+           L 810.67,533.50
+           L 807.50,536.76
+           L 794.16,549.50
+           L 788.513,555.309 Z"/>
 </svg>
