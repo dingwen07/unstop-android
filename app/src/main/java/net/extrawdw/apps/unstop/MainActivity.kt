@@ -107,6 +107,8 @@ import kotlinx.coroutines.withContext
 import net.extrawdw.apps.unstop.ui.theme.UnstopTheme
 import java.util.Locale
 
+private const val RELATIVE_TIME_GRACE_PERIOD_MILLIS = 5_000L
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -517,7 +519,7 @@ private fun MonitorScreen(
                                         R.string.last_check_time,
                                         DateUtils.getRelativeTimeSpanString(
                                             lastRun.timestamp,
-                                            currentTimeMillis,
+                                            currentTimeMillis + RELATIVE_TIME_GRACE_PERIOD_MILLIS,
                                             DateUtils.MINUTE_IN_MILLIS,
                                         ),
                                     ),
