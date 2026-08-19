@@ -78,7 +78,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -95,7 +94,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.extrawdw.apps.unstop.ui.theme.UnstopTheme
@@ -193,8 +195,22 @@ private fun MonitorScreen(
     var discoveredApps by remember { mutableStateOf<List<FcmApp>?>(null) }
     var refreshVersion by remember { mutableIntStateOf(0) }
     var isRunning by remember { mutableStateOf(false) }
-    var lastRunSummary by remember { mutableStateOf(UnstopStore.lastRunSummary(context)) }
-    var lastRunAt by remember { mutableLongStateOf(UnstopStore.lastRunAt(context)) }
+    val lastRunFlow = remember(context) { UnstopStore.observeLastRun(context) }
+    val lastRun by lastRunFlow.collectAsStateWithLifecycle(
+        initialValue = remember(context) { UnstopStore.lastRun(context) },
+    )
+    val minuteTicker = remember {
+        flow {
+            while (true) {
+                val now = System.currentTimeMillis()
+                emit(now)
+                delay(DateUtils.MINUTE_IN_MILLIS - now % DateUtils.MINUTE_IN_MILLIS)
+            }
+        }
+    }
+    val currentTimeMillis by minuteTicker.collectAsStateWithLifecycle(
+        initialValue = System.currentTimeMillis(),
+    )
     val listState = rememberLazyListState()
 
     LaunchedEffect(monitorUsers, refreshVersion) {
@@ -349,11 +365,9 @@ private fun MonitorScreen(
                             onClick = {
                                 isRunning = true
                                 scope.launch {
-                                    val result = withContext(Dispatchers.IO) {
+                                    withContext(Dispatchers.IO) {
                                         UnstopEngine.runAndRecord(context, UnstopTrigger.MANUAL)
                                     }
-                                    lastRunSummary = result.message
-                                    lastRunAt = UnstopStore.lastRunAt(context)
                                     isRunning = false
                                     refreshVersion++
                                     shizukuStatus = ShizukuController.status()
@@ -445,15 +459,15 @@ private fun MonitorScreen(
                 Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     ListItem(
                         leadingContent = { Icon(Icons.Outlined.Info, contentDescription = null) },
-                        headlineContent = { Text(lastRunSummary) },
-                        supportingContent = if (lastRunAt == 0L) null else {
+                        headlineContent = { Text(lastRun.summary) },
+                        supportingContent = if (lastRun.timestamp == 0L) null else {
                             {
                                 Text(
                                     stringResource(
                                         R.string.last_check_time,
                                         DateUtils.getRelativeTimeSpanString(
-                                            lastRunAt,
-                                            System.currentTimeMillis(),
+                                            lastRun.timestamp,
+                                            currentTimeMillis,
                                             DateUtils.MINUTE_IN_MILLIS,
                                         ),
                                     ),

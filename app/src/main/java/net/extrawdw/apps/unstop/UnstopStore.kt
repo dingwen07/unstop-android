@@ -1,7 +1,17 @@
 package net.extrawdw.apps.unstop
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.core.content.edit
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+
+internal data class LastRunState(
+    val timestamp: Long,
+    val summary: String,
+)
 
 /** Small, synchronous preference store shared by the UI and the alarm receiver. */
 internal object UnstopStore {
@@ -88,11 +98,24 @@ internal object UnstopStore {
         )
     }
 
-    fun lastRunAt(context: Context): Long = prefs(context).getLong(KEY_LAST_RUN_AT, 0L)
+    fun lastRun(context: Context): LastRunState = lastRunState(context, prefs(context))
 
-    fun lastRunSummary(context: Context): String =
-        prefs(context).getString(KEY_LAST_RUN_SUMMARY, null)
-            ?: context.getString(R.string.last_run_none)
+    /** Emits persisted background-run updates and rereads the current value on every collection. */
+    fun observeLastRun(context: Context): Flow<LastRunState> {
+        val appContext = context.applicationContext
+        return callbackFlow {
+            val preferences = prefs(appContext)
+            fun emitCurrent() {
+                trySend(lastRunState(appContext, preferences))
+            }
+            val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+                if (key == KEY_LAST_RUN_AT || key == KEY_LAST_RUN_SUMMARY) emitCurrent()
+            }
+            preferences.registerOnSharedPreferenceChangeListener(listener)
+            emitCurrent()
+            awaitClose { preferences.unregisterOnSharedPreferenceChangeListener(listener) }
+        }.distinctUntilChanged()
+    }
 
     fun saveLastRun(context: Context, timestamp: Long, summary: String) {
         prefs(context).edit {
@@ -100,6 +123,15 @@ internal object UnstopStore {
             putString(KEY_LAST_RUN_SUMMARY, summary)
         }
     }
+
+    private fun lastRunState(
+        context: Context,
+        preferences: SharedPreferences,
+    ): LastRunState = LastRunState(
+        timestamp = preferences.getLong(KEY_LAST_RUN_AT, 0L),
+        summary = preferences.getString(KEY_LAST_RUN_SUMMARY, null)
+            ?: context.getString(R.string.last_run_none),
+    )
 
     private fun packageNameFromStoredValue(value: String): String? {
         val separator = value.indexOf(APP_SEPARATOR)
