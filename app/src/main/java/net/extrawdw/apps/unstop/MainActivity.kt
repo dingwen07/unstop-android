@@ -72,6 +72,9 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -82,6 +85,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -91,6 +95,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -238,6 +243,12 @@ private fun MonitorScreen(
     var users by remember { mutableStateOf(FcmRepository.availableUsers(context)) }
     var intervalMinutes by remember { mutableIntStateOf(UnstopStore.intervalMinutes(context)) }
     var periodicEnabled by remember { mutableStateOf(UnstopStore.periodicEnabled(context)) }
+    var fcmProtectionEnabled by remember {
+        mutableStateOf(UnstopStore.fcmConnectionProtectionEnabled(context))
+    }
+    var fcmPollingIntervalMillis by remember {
+        mutableLongStateOf(UnstopStore.fcmPollingIntervalMillis(context))
+    }
     var discoveredApps by remember { mutableStateOf<List<FcmApp>?>(null) }
     var refreshVersion by remember { mutableIntStateOf(0) }
     var isRunning by remember { mutableStateOf(false) }
@@ -258,6 +269,15 @@ private fun MonitorScreen(
         initialValue = System.currentTimeMillis(),
     )
     val listState = rememberLazyListState()
+
+    fun reconcileFcmProtection(trigger: String) {
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                ShizukuController.reconcileFcmConnectionProtection(context, trigger)
+            }
+            shizukuStatus = ShizukuController.status()
+        }
+    }
 
     LaunchedEffect(monitorUsers, refreshVersion) {
         val result = withContext(Dispatchers.IO) {
@@ -335,37 +355,53 @@ private fun MonitorScreen(
             item {
                 Card {
                     Column {
-                        ListItem(
-                            leadingContent = {
-                                Icon(Icons.Outlined.Schedule, contentDescription = null)
+                        SwitchSettingRow(
+                            icon = Icons.Outlined.Schedule,
+                            title = stringResource(R.string.periodic_unstop),
+                            description = if (periodicEnabled) {
+                                pluralStringResource(
+                                    R.plurals.periodic_schedule,
+                                    selectedApps,
+                                    formatInterval(intervalMinutes),
+                                    selectedApps,
+                                )
+                            } else {
+                                stringResource(R.string.periodic_disabled)
                             },
-                            headlineContent = { Text(stringResource(R.string.periodic_unstop)) },
-                            supportingContent = {
-                                Text(
-                                    if (periodicEnabled) {
-                                        pluralStringResource(
-                                            R.plurals.periodic_schedule,
-                                            selectedApps,
-                                            formatInterval(intervalMinutes),
-                                            selectedApps,
-                                        )
-                                    } else {
-                                        stringResource(R.string.periodic_disabled)
-                                    },
+                            checked = periodicEnabled,
+                            onCheckedChange = {
+                                periodicEnabled = it
+                                UnstopStore.setPeriodicEnabled(context, it)
+                                UnstopWorkScheduler.updateScheduled(
+                                    context,
+                                    source = "periodic_setting_changed",
                                 )
                             },
-                            trailingContent = {
-                                Switch(
-                                    checked = periodicEnabled,
-                                    onCheckedChange = {
-                                        periodicEnabled = it
-                                        UnstopStore.setPeriodicEnabled(context, it)
-                                        UnstopWorkScheduler.updateScheduled(
-                                            context,
-                                            source = "periodic_setting_changed",
-                                        )
-                                    },
-                                )
+                        )
+                        SwitchSettingRow(
+                            icon = Icons.Outlined.Shield,
+                            title = stringResource(R.string.fcm_connection_protection),
+                            description = stringResource(
+                                if (fcmProtectionEnabled) {
+                                    R.string.fcm_connection_protection_enabled_description
+                                } else {
+                                    R.string.fcm_connection_protection_disabled_description
+                                },
+                            ),
+                            checked = fcmProtectionEnabled,
+                            onCheckedChange = { enabled ->
+                                fcmProtectionEnabled = enabled
+                                UnstopStore.setFcmConnectionProtectionEnabled(context, enabled)
+                                reconcileFcmProtection("master_setting_changed")
+                            },
+                        )
+                        FcmPollingIntervalPicker(
+                            selectedIntervalMillis = fcmPollingIntervalMillis,
+                            enabled = fcmProtectionEnabled,
+                            onIntervalChanged = { intervalMillis ->
+                                fcmPollingIntervalMillis = intervalMillis
+                                UnstopStore.setFcmPollingIntervalMillis(context, intervalMillis)
+                                reconcileFcmProtection("polling_interval_changed")
                             },
                         )
                         IntervalPicker(
@@ -884,34 +920,113 @@ private fun ShizukuCard(
         )
     }
     Card {
-        ListItem(
-            leadingContent = { Icon(icon, contentDescription = null) },
-            headlineContent = { Text(title) },
-            supportingContent = { Text(description) },
-            trailingContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (status != ShizukuStatus.READY) {
-                        TextButton(onClick = onAction) {
-                            Text(
-                                stringResource(
-                                    if (status == ShizukuStatus.NOT_RUNNING) {
-                                        R.string.open
-                                    } else {
-                                        R.string.grant
-                                    },
-                                ),
-                            )
-                        }
-                    }
-                    IconButton(onClick = onRefresh) {
-                        Icon(
-                            Icons.Outlined.Refresh,
-                            contentDescription = stringResource(R.string.refresh_shizuku_status),
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icon, contentDescription = null)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (status != ShizukuStatus.READY) {
+                    TextButton(onClick = onAction) {
+                        Text(
+                            stringResource(
+                                if (status == ShizukuStatus.NOT_RUNNING) {
+                                    R.string.open
+                                } else {
+                                    R.string.grant
+                                },
+                            ),
                         )
                     }
                 }
+                IconButton(onClick = onRefresh) {
+                    Icon(
+                        Icons.Outlined.Refresh,
+                        contentDescription = stringResource(R.string.refresh_shizuku_status),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SwitchSettingRow(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FcmPollingIntervalPicker(
+    selectedIntervalMillis: Long,
+    enabled: Boolean,
+    onIntervalChanged: (Long) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            stringResource(R.string.fcm_connection_check_interval),
+            style = MaterialTheme.typography.labelLarge,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             },
         )
+        SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+            FcmPollingInterval.OPTIONS_MILLIS.forEachIndexed { index, intervalMillis ->
+                SegmentedButton(
+                    selected = selectedIntervalMillis == intervalMillis,
+                    onClick = { onIntervalChanged(intervalMillis) },
+                    enabled = enabled,
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = index,
+                        count = FcmPollingInterval.OPTIONS_MILLIS.size,
+                    ),
+                ) {
+                    Text(stringResource(R.string.seconds_short, intervalMillis / 1_000L))
+                }
+            }
+        }
     }
 }
 
@@ -957,7 +1072,7 @@ private fun AppsScreen(reloadVersion: Int) {
         apps = withContext(Dispatchers.IO) {
             FcmRepository.refresh(
                 context,
-                requestedUserIds = null,
+                requestedUserIds = UnstopStore.monitorUsers(context),
             ).apps
         }
     }

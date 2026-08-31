@@ -22,6 +22,8 @@ internal object UnstopStore {
     private const val KEY_APPS = "enabled_apps"
     private const val KEY_INTERVAL_MINUTES = "interval_minutes"
     private const val KEY_PERIODIC_ENABLED = "periodic_enabled"
+    private const val KEY_FCM_CONNECTION_PROTECTION_ENABLED = "fcm_connection_protection_enabled"
+    private const val KEY_FCM_POLLING_INTERVAL_MILLIS = "fcm_polling_interval_millis"
     private const val KEY_LAST_RUN_AT = "last_run_at"
     private const val KEY_LAST_RUN_SUMMARY = "last_run_summary"
     private const val APP_SEPARATOR = "|"
@@ -95,6 +97,35 @@ internal object UnstopStore {
             context,
             "Settings",
             "Periodic unstop ${if (enabled) "enabled" else "disabled"}",
+        )
+    }
+
+    fun fcmConnectionProtectionEnabled(context: Context): Boolean =
+        prefs(context).getBoolean(KEY_FCM_CONNECTION_PROTECTION_ENABLED, true)
+
+    fun setFcmConnectionProtectionEnabled(context: Context, enabled: Boolean) {
+        prefs(context).edit { putBoolean(KEY_FCM_CONNECTION_PROTECTION_ENABLED, enabled) }
+        PersistentLog.info(
+            context,
+            "Settings",
+            "FCM connection protection ${if (enabled) "enabled" else "disabled"}",
+        )
+    }
+
+    fun fcmPollingIntervalMillis(context: Context): Long = FcmPollingInterval.normalize(
+        prefs(context).getLong(
+            KEY_FCM_POLLING_INTERVAL_MILLIS,
+            FcmPollingInterval.DEFAULT_MILLIS,
+        ),
+    )
+
+    fun setFcmPollingIntervalMillis(context: Context, intervalMillis: Long) {
+        val normalized = FcmPollingInterval.normalize(intervalMillis)
+        prefs(context).edit { putLong(KEY_FCM_POLLING_INTERVAL_MILLIS, normalized) }
+        PersistentLog.info(
+            context,
+            "Settings",
+            "FCM connection polling interval changed to ${normalized / 1_000L} seconds",
         )
     }
 

@@ -68,7 +68,12 @@ internal object UnstopEngine {
         )
         // Background work intentionally does not enumerate every FCM receiver. The UserService
         // checks only these selected package names for each monitored user, then unstops matches.
-        val result = ShizukuController.unstopSelected(appContext, users, enabledPackages)
+        val result = ShizukuController.unstopSelected(
+            appContext,
+            users,
+            enabledPackages,
+            trigger.logName,
+        )
         val message = when {
             result.status == ShizukuStatus.NOT_RUNNING ->
                 appContext.getString(R.string.summary_shizuku_not_running)

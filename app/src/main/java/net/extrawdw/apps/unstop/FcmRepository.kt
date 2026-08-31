@@ -54,25 +54,25 @@ internal object FcmRepository {
             names.putIfAbsent(userId, fallbackUserName(context, userId))
         }
 
-        val shellBatch = if (ShizukuController.status() == ShizukuStatus.READY) {
+        val binderBatch = if (ShizukuController.status() == ShizukuStatus.READY) {
             ShizukuController.discoverFcmApps(context, requestedUserIds)
         } else {
             null
         }
-        val shellUsers = parseShellUsers(context, shellBatch?.usersOutput.orEmpty())
-        shellUsers.forEach { (id, name) -> names[id] = name }
-        if (shellBatch != null) {
+        val binderUsers = parseBinderUsers(context, binderBatch?.usersOutput.orEmpty())
+        binderUsers.forEach { (id, name) -> names[id] = name }
+        if (binderBatch != null) {
             PersistentLog.info(
                 context,
                 "Discovery",
-                "Listed Android users through Shizuku; users=${shellUsers.keys.sorted()}",
+                "Listed Android users through Shizuku Binder commands; users=${binderUsers.keys.sorted()}",
             )
         }
 
         val usersToScan = requestedUserIds
             ?.distinct()
             ?.sorted()
-            ?: shellUsers.keys.sorted().ifEmpty { names.keys.sorted() }
+            ?: binderUsers.keys.sorted().ifEmpty { names.keys.sorted() }
         usersToScan.forEach { userId ->
             names.putIfAbsent(userId, fallbackUserName(context, userId))
         }
@@ -85,7 +85,7 @@ internal object FcmRepository {
             userIds = usersToScan,
             loadIcons = loadIcons,
             userLabels = userLabels,
-            snapshotOutputs = shellBatch?.snapshotsByUser.orEmpty(),
+            snapshotOutputs = binderBatch?.snapshotsByUser.orEmpty(),
         )
         return FcmDiscoveryResult(users, apps)
     }
@@ -115,12 +115,12 @@ internal object FcmRepository {
             "Starting FCM discovery; users=$users, loadIcons=$loadIcons",
         )
         val apps = users.flatMap { userId ->
-            val hasShellSnapshot = userId in snapshotOutputs
-            val shellSnapshot = snapshotOutputs[userId]
+            val hasBinderSnapshot = userId in snapshotOutputs
+            val binderSnapshot = snapshotOutputs[userId]
                 ?.let(::parseSnapshot)
                 ?: PackageSnapshot.empty()
-            val packageNames = if (hasShellSnapshot) {
-                shellSnapshot.receiverPackages
+            val packageNames = if (hasBinderSnapshot) {
+                binderSnapshot.receiverPackages
             } else if (userId == 0) {
                 directReceiverPackages(pm, intent)
             } else {
@@ -130,8 +130,8 @@ internal object FcmRepository {
                 context,
                 "Discovery",
                 "User $userId scan; receiverPackages=${packageNames.size}, " +
-                    "stoppedPackages=${shellSnapshot.stoppedPackages.count { it.value }}, " +
-                    "source=${if (hasShellSnapshot) "Shizuku" else if (userId == 0) "PackageManager fallback" else "none"}",
+                    "stoppedPackages=${binderSnapshot.stoppedPackages.count { it.value }}, " +
+                    "source=${if (hasBinderSnapshot) "Shizuku Binder" else if (userId == 0) "PackageManager fallback" else "none"}",
             )
 
             packageNames.mapNotNull { packageName ->
@@ -147,7 +147,7 @@ internal object FcmRepository {
                         ?: packageName,
                     userId = userId,
                     userLabel = userLabels[userId] ?: fallbackUserLabel(context, userId),
-                    stopped = shellSnapshot.stoppedPackages[packageName]
+                    stopped = binderSnapshot.stoppedPackages[packageName]
                         ?: (flags and ApplicationInfo.FLAG_STOPPED.toInt() != 0),
                     icon = if (loadIcons && appInfo != null) {
                         runCatching { pm.getApplicationIcon(appInfo).toBitmap(ICON_SIZE_PX) }.getOrNull()
@@ -198,7 +198,7 @@ internal object FcmRepository {
         return PackageSnapshot(receiverPackages, stoppedPackages)
     }
 
-    private fun parseShellUsers(context: Context, output: String): Map<Int, String> = output.lineSequence()
+    private fun parseBinderUsers(context: Context, output: String): Map<Int, String> = output.lineSequence()
         .mapNotNull { line ->
             val match = userInfoPattern.find(line) ?: return@mapNotNull null
             val id = match.groupValues[1].toIntOrNull() ?: return@mapNotNull null

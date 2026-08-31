@@ -10,6 +10,11 @@
         <item quantity="other">Runs every %1$s · %2$d selected packages</item>
     </plurals>
     <string name="periodic_disabled">Disabled · manual unstop remains available</string>
+    <string name="fcm_connection_protection">FCM connection protection</string>
+    <string name="fcm_connection_protection_enabled_description">Requests an FCM reconnect when Google Play services disconnects</string>
+    <string name="fcm_connection_protection_disabled_description">Disabled · no automatic FCM reconnect requests</string>
+    <string name="fcm_connection_check_interval">Connection check interval</string>
+    <string name="seconds_short">%d s</string>
     <string name="unstop_now">Unstop now</string>
     <plurals name="selected_apps_stopped">
         <item quantity="one">%d selected app currently stopped</item>

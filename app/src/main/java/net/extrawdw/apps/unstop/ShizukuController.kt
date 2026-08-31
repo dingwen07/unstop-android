@@ -39,8 +39,8 @@ internal object ShizukuController {
     private const val USER_SERVICE_VERSION = 1
     private val serviceLock = Any()
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val exitPattern = Regex("__UNSTOP_EXIT__(-?\\d+)")
     private val unstoppedPattern = Regex("__UNSTOP_UNSTOPPED__(\\d+)")
+    private val failedPattern = Regex("__UNSTOP_FAILED__(\\d+)")
     private val successfulUnstopPattern = Regex(
         "__UNSTOP_RESULT__(\\d+)\\|([A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*)\\|unstopped",
     )
@@ -49,9 +49,9 @@ internal object ShizukuController {
     private val serviceArgs = Shizuku.UserServiceArgs(
         ComponentName(BuildConfig.APPLICATION_ID, UnstopUserService::class.java.name),
     )
-        .daemon(false)
+        .daemon(true)
         .processNameSuffix("unstop")
-        .tag("unstop-v1")
+        .tag("unstop")
         .debuggable(BuildConfig.DEBUG)
         .version(USER_SERVICE_VERSION)
 
@@ -88,6 +88,7 @@ internal object ShizukuController {
         context: Context,
         userIds: Collection<Int>,
         packageNames: Collection<String>,
+        trigger: String,
     ): ShizukuRunResult {
         val appContext = context.applicationContext
         val currentStatus = status()
@@ -113,11 +114,16 @@ internal object ShizukuController {
         PersistentLog.info(
             appContext,
             "Shizuku",
-            "Running one shell script; users=$users, selectedPackageCount=${packages.size}",
+            "Running Binder package commands; users=$users, selectedPackageCount=${packages.size}",
         )
-        val script = buildUnstopScript(userIds, packages)
         val diagnosticResult = runCatching {
-            withService(appContext, "unstop") { service -> service.runShellWithOutput(script) }
+            withService(appContext, "unstop") { service ->
+                service.unstop(
+                    packages.toTypedArray(),
+                    users.toIntArray(),
+                    trigger,
+                )
+            }
         }
         val diagnosticOutput = diagnosticResult.getOrNull()
         if (diagnosticOutput == null) {
@@ -146,57 +152,24 @@ internal object ShizukuController {
                 packageName = match.groupValues[2],
             )
         }
-        val exitCode = exitPattern.find(diagnosticOutput)?.groupValues?.get(1)?.toIntOrNull() ?: 1
         val unstopped = unstoppedPattern.find(diagnosticOutput)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        val failed = failedPattern.find(diagnosticOutput)?.groupValues?.get(1)?.toIntOrNull() ?: 1
         PersistentLog.info(
             appContext,
             "Shizuku",
-            "Shell script completed; exitCode=$exitCode, unstopped=$unstopped",
+            "Binder package commands completed; unstopped=$unstopped, failed=$failed",
         )
         return ShizukuRunResult(
             status = ShizukuStatus.READY,
             attempted = unstopped,
-            commandSucceeded = exitCode == 0,
+            commandSucceeded = failed == 0,
         )
     }
-
-    private fun buildUnstopScript(userIds: Collection<Int>, packageNames: Collection<String>): String =
-        buildString {
-            appendLine("unstopped=0")
-            appendLine("failed=0")
-            userIds.distinct().sorted().forEach { userId ->
-                appendLine("state=${'$'}(/system/bin/pm list packages --user $userId --show-stopped 2>/dev/null)")
-                appendLine("state_exit=${'$'}?")
-                appendLine("if [ \"${'$'}state_exit\" -ne 0 ]; then")
-                appendLine("  echo \"__UNSTOP_USER__$userId|list_failed|${'$'}state_exit\"")
-                appendLine("  failed=1")
-                appendLine("else")
-                appendLine("  echo \"__UNSTOP_USER__$userId|listed\"")
-                packageNames.forEach { packageName ->
-                    val quotedPackage = shellQuote(packageName)
-                    appendLine("  case ${'$'}state in")
-                    appendLine("    *\"package:$packageName stopped=true\"*)")
-                    appendLine("      echo \"__UNSTOP_MATCH__$userId|$packageName\"")
-                    appendLine("      if /system/bin/pm unstop --user $userId $quotedPackage >/dev/null 2>&1; then")
-                    appendLine("        unstopped=${'$'}((unstopped + 1))")
-                    appendLine("        echo \"__UNSTOP_RESULT__$userId|$packageName|unstopped\"")
-                    appendLine("      else")
-                    appendLine("        failed=1")
-                    appendLine("        echo \"__UNSTOP_RESULT__$userId|$packageName|failed\"")
-                    appendLine("      fi")
-                    appendLine("      ;;")
-                    appendLine("  esac")
-                }
-                appendLine("fi")
-            }
-            appendLine("echo __UNSTOP_UNSTOPPED__${'$'}unstopped")
-            appendLine("exit ${'$'}failed")
-        }
 
     private fun isPackageName(value: String): Boolean =
         value.matches(Regex("[A-Za-z0-9_]+(?:\\.[A-Za-z0-9_]+)*"))
 
-    /** Lists users and scans every requested user through one short-lived UserService binding. */
+    /** Lists users and scans every requested user through one retained UserService binding. */
     fun discoverFcmApps(
         context: Context,
         requestedUserIds: Collection<Int>?,
@@ -228,15 +201,42 @@ internal object ShizukuController {
         PersistentLog.error(context, "Shizuku", "Could not complete FCM discovery batch", error)
     }.getOrNull()
 
+    fun reconcileFcmConnectionProtection(context: Context, trigger: String): Boolean {
+        val appContext = context.applicationContext
+        if (status() != ShizukuStatus.READY) {
+            PersistentLog.info(
+                appContext,
+                "Shizuku",
+                "Deferred FCM connection protection reconciliation; Shizuku is not ready",
+            )
+            return false
+        }
+        val enabled = UnstopStore.fcmConnectionProtectionEnabled(appContext)
+        return runCatching {
+            withService(
+                context = appContext,
+                operation = "fcm-protection-$trigger",
+                fcmProtectionEnabled = enabled,
+            ) { Unit }
+        }.onFailure { error ->
+            PersistentLog.error(
+                appContext,
+                "Shizuku",
+                "Could not reconcile FCM connection protection",
+                error,
+            )
+        }.isSuccess
+    }
+
     private fun <T> withService(
         context: Context,
         operation: String,
+        fcmProtectionEnabled: Boolean = UnstopStore.fcmConnectionProtectionEnabled(context),
         block: (IUnstopService) -> T,
     ): T = synchronized(serviceLock) {
         val startedAt = System.currentTimeMillis()
         PersistentLog.debug(context, "UserService", "Binding for $operation")
         val connected = CountDownLatch(1)
-        val disconnected = CountDownLatch(1)
         var remote: IUnstopService? = null
         var bindFailure: Throwable? = null
         val connection = object : ServiceConnection {
@@ -250,22 +250,21 @@ internal object ShizukuController {
                 if (remote == null) {
                     bindFailure = IllegalStateException("UserService disconnected before $operation")
                 }
+                remote = null
                 connected.countDown()
-                disconnected.countDown()
             }
 
             override fun onBindingDied(name: ComponentName) {
                 if (remote == null) {
                     bindFailure = IllegalStateException("UserService binding died before $operation")
                 }
+                remote = null
                 connected.countDown()
-                disconnected.countDown()
             }
 
             override fun onNullBinding(name: ComponentName) {
                 bindFailure = IllegalStateException("UserService returned a null binding for $operation")
                 connected.countDown()
-                disconnected.countDown()
             }
         }
 
@@ -286,6 +285,22 @@ internal object ShizukuController {
             throw error
         }
         try {
+            if (fcmProtectionEnabled) {
+                PersistentLog.shizukuLogDirectory(context)?.let { directory ->
+                    val fileName = service.attachLogDirectory(directory)
+                    PersistentLog.debug(
+                        context,
+                        "UserService",
+                        "Attached FCM service log $fileName",
+                    )
+                }
+            }
+            val protection = service.configureFcmConnectionProtection(
+                fcmProtectionEnabled,
+                UnstopStore.fcmPollingIntervalMillis(context),
+                operation,
+            )
+            PersistentLog.debug(context, "UserService", protection)
             block(service).also {
                 PersistentLog.debug(
                     context,
@@ -301,7 +316,11 @@ internal object ShizukuController {
             var unbindFailure: Throwable? = null
             mainHandler.post {
                 try {
-                    Shizuku.unbindUserService(serviceArgs, connection, true)
+                    Shizuku.unbindUserService(
+                        serviceArgs,
+                        connection,
+                        !fcmProtectionEnabled,
+                    )
                 } catch (error: Throwable) {
                     unbindFailure = error
                 } finally {
@@ -317,18 +336,19 @@ internal object ShizukuController {
                     "Unbind request failed after $operation",
                     unbindFailure,
                 )
-            } else if (!disconnected.await(SERVICE_UNBIND_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-                PersistentLog.warn(
+            } else if (fcmProtectionEnabled) {
+                PersistentLog.debug(
                     context,
                     "UserService",
-                    "No disconnect callback after $operation; the next bind may be delayed",
+                    "Client unbound after $operation; daemon retained for FCM protection",
                 )
             } else {
-                PersistentLog.debug(context, "UserService", "Disconnected after $operation")
+                PersistentLog.debug(
+                    context,
+                    "UserService",
+                    "Client unbound after $operation; service removed because FCM protection is disabled",
+                )
             }
         }
     }
-
-    private fun shellQuote(value: String): String =
-        "'${value.replace("'", "'\\''")}'"
 }

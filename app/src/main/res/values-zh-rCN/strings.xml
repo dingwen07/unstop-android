@@ -8,6 +8,11 @@
         <item quantity="other">每 %1$s运行一次 · 已选择 %2$d 个软件包</item>
     </plurals>
     <string name="periodic_disabled">已停用 · 仍可手动解除停止</string>
+    <string name="fcm_connection_protection">FCM 连接保护</string>
+    <string name="fcm_connection_protection_enabled_description">Google Play 服务的 FCM 连接断开时请求重新连接</string>
+    <string name="fcm_connection_protection_disabled_description">已停用 · 不会自动请求 FCM 重新连接</string>
+    <string name="fcm_connection_check_interval">连接检查间隔</string>
+    <string name="seconds_short">%d 秒</string>
     <string name="unstop_now">立即解除停止</string>
     <plurals name="selected_apps_stopped">
         <item quantity="other">当前有 %d 个所选应用处于停止状态</item>

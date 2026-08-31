@@ -2,7 +2,7 @@
 
 Unstop is an Android utility that helps keep selected Firebase Cloud Messaging (FCM) apps eligible to receive messages when an OEM or Android profile has placed them in the stopped state.
 
-The app uses [Shizuku](https://shizuku.rikka.app/) for shell-level package access. It discovers FCM-capable apps, lets you select monitored Android users and packages, and can periodically run the unstop check without launching the target apps.
+The app uses [Shizuku](https://shizuku.rikka.app/) for privileged Binder access. It discovers FCM-capable apps, lets you select monitored Android users and packages, and can periodically run the unstop check without launching the target apps. A retained Shizuku UserService also checks the Google Play services FCM socket every 30 seconds and requests a reconnect when the connection is missing.
 
 ## Requirements
 
@@ -35,4 +35,5 @@ Install and run the debug build from Android Studio, then start Shizuku and gran
 - Minimum SDK: 36
 - Target/compile SDK: 37
 - UI: Jetpack Compose with Material 3
-- Privileged package operations: Shizuku UserService
+- Privileged package operations: Shizuku UserService with Binder system-service commands
+- FCM connection protection: 30-second socket probe with disconnect-triggered reconnect
