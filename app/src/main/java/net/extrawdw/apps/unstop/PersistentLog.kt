@@ -65,13 +65,19 @@ internal object PersistentLog {
     fun error(context: Context, component: String, message: String, error: Throwable? = null) =
         append(context, "ERROR", Log.ERROR, component, message, error)
 
-    /** Prepares the owner-user external directory that Shizuku's shell process can append to. */
-    fun shizukuLogDirectory(context: Context): String? = synchronized(lock) {
-        val directory = externalLogDirectory(context) ?: return null
-        if (!directory.exists() && !directory.mkdirs()) return null
-        if (!directory.isDirectory) return null
-        pruneExternalLogsLocked(directory)
-        directory.absolutePath
+    /** Creates the external file as the app UID before Shizuku's shell process appends to it. */
+    fun prepareShizukuLogFile(context: Context, fileName: String): String? = synchronized(lock) {
+        if (!GMS_LOG_FILE.matches(fileName)) return null
+        runCatching {
+            val directory = externalLogDirectory(context) ?: return@runCatching null
+            if (!directory.exists() && !directory.mkdirs()) return@runCatching null
+            if (!directory.isDirectory) return@runCatching null
+            val file = directory.resolve(fileName)
+            if (!file.exists() && !file.createNewFile()) return@runCatching null
+            if (!file.isFile) return@runCatching null
+            pruneExternalLogsLocked(directory, current = file)
+            file.absolutePath
+        }.getOrNull()
     }
 
     fun snapshot(context: Context, selectedFileName: String? = null): PersistentLogSnapshot =
@@ -193,18 +199,18 @@ internal object PersistentLog {
         }
     }
 
-    private fun pruneExternalLogsLocked(directory: File) {
+    private fun pruneExternalLogsLocked(directory: File, current: File?) {
         val oldestFirst = directory.listFiles().orEmpty()
             .filter { it.isFile && it.name.startsWith(GMS_LOG_PREFIX) }
             .sortedBy(File::lastModified)
             .toMutableList()
-        val newest = oldestFirst.lastOrNull()
+        val protectedFile = current ?: oldestFirst.lastOrNull()
         var totalBytes = oldestFirst.sumOf(File::length)
         while (
             oldestFirst.size > MAX_EXTERNAL_RETAINED_FILES ||
             totalBytes > MAX_EXTERNAL_TOTAL_BYTES
         ) {
-            val candidate = oldestFirst.firstOrNull { it != newest } ?: break
+            val candidate = oldestFirst.firstOrNull { it != protectedFile } ?: break
             oldestFirst.remove(candidate)
             val length = candidate.length()
             if (candidate.delete()) totalBytes -= length
@@ -230,4 +236,6 @@ internal object PersistentLog {
 
     private fun externalLogDirectory(context: Context): File? =
         context.applicationContext.getExternalFilesDir(null)?.let { File(it, LOG_DIRECTORY) }
+
+    private val GMS_LOG_FILE = Regex("gms-[0-9]{8}-[0-9]{6}-[0-9]{3}-p[0-9]+\\.log")
 }

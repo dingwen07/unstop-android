@@ -35,6 +35,7 @@ class UnstopUserService() : IUnstopService.Stub() {
     private val serviceLogLock = Any()
     private val pendingServiceLogs = ArrayDeque<String>()
     private val serviceLogTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS XXX", Locale.US)
+    private val serviceLogFileName = newServiceLogFileName()
     private var serviceLogFile: File? = null
     private var serviceLogWriter: BufferedWriter? = null
 
@@ -156,20 +157,20 @@ class UnstopUserService() : IUnstopService.Stub() {
         }.trim()
     }
 
-    override fun attachLogDirectory(logDirectory: String): String {
-        val directory = validateLogDirectory(logDirectory)
+    override fun getServiceLogFileName(): String = serviceLogFileName
+
+    override fun attachLogPath(logPath: String) {
+        val file = validateLogFile(logPath)
         synchronized(serviceLogLock) {
             val currentFile = serviceLogFile
-            if (currentFile == null || !currentFile.exists()) {
+            if (currentFile == null || currentFile != file || !currentFile.exists()) {
                 runCatching { serviceLogWriter?.close() }
-                val file = currentFile ?: directory.resolve(newServiceLogFileName())
                 serviceLogFile = file
                 serviceLogWriter = newServiceLogWriter(file, append = true)
                 while (pendingServiceLogs.isNotEmpty()) {
                     writeServiceLogLocked(pendingServiceLogs.removeFirst())
                 }
             }
-            return serviceLogFile?.name ?: error("FCM service log was not created")
         }
     }
 
@@ -347,7 +348,12 @@ class UnstopUserService() : IUnstopService.Stub() {
                 }
                 pendingServiceLogs.addLast(line)
             } else {
-                writeServiceLogLocked(line)
+                runCatching { writeServiceLogLocked(line) }
+                    .onFailure { error ->
+                        Log.e(TAG, "Could not append external FCM service log", error)
+                        runCatching { serviceLogWriter?.close() }
+                        serviceLogWriter = null
+                    }
             }
         }
     }
@@ -373,13 +379,14 @@ class UnstopUserService() : IUnstopService.Stub() {
         OutputStreamWriter(FileOutputStream(file, append), Charsets.UTF_8),
     )
 
-    private fun validateLogDirectory(logDirectory: String): File {
-        val directory = File(logDirectory).canonicalFile
-        val normalizedPath = directory.path.replace('\\', '/')
-        val requiredSuffix = "/Android/data/${BuildConfig.APPLICATION_ID}/files/logs"
-        require(normalizedPath.endsWith(requiredSuffix)) { "Invalid FCM service log directory" }
-        require(directory.isDirectory) { "FCM service log directory does not exist" }
-        return directory
+    private fun validateLogFile(logPath: String): File {
+        val file = File(logPath).canonicalFile
+        val normalizedPath = file.path.replace('\\', '/')
+        val requiredSuffix =
+            "/Android/data/${BuildConfig.APPLICATION_ID}/files/logs/$serviceLogFileName"
+        require(normalizedPath.endsWith(requiredSuffix)) { "Invalid FCM service log path" }
+        require(file.isFile) { "FCM service log file does not exist" }
+        return file
     }
 
     private fun newServiceLogFileName(): String {

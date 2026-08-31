@@ -286,12 +286,22 @@ internal object ShizukuController {
         }
         try {
             if (fcmProtectionEnabled) {
-                PersistentLog.shizukuLogDirectory(context)?.let { directory ->
-                    val fileName = service.attachLogDirectory(directory)
-                    PersistentLog.debug(
+                runCatching {
+                    val fileName = service.serviceLogFileName
+                    PersistentLog.prepareShizukuLogFile(context, fileName)?.let { path ->
+                        service.attachLogPath(path)
+                        PersistentLog.debug(context, "UserService", "Attached FCM service log $fileName")
+                    } ?: PersistentLog.warn(
                         context,
                         "UserService",
-                        "Attached FCM service log $fileName",
+                        "Could not prepare external FCM service log $fileName",
+                    )
+                }.onFailure { error ->
+                    PersistentLog.warn(
+                        context,
+                        "UserService",
+                        "Could not attach external FCM service log",
+                        error,
                     )
                 }
             }
