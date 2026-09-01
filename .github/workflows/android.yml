@@ -25,10 +25,10 @@ jobs:
           cache: gradle
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
-      - name: Install Android SDK platform
-        run: sdkmanager 'platforms;android-37'
+      - name: Install Android SDK packages
+        run: sdkmanager --channel=3 'platforms;android-37.0' 'build-tools;37.0.0'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
