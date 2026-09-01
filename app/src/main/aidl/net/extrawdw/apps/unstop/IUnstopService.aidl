@@ -7,5 +7,6 @@ interface IUnstopService {
     String configureFcmConnectionProtection(boolean enabled, long pollingIntervalMillis, String trigger) = 4;
     String getServiceLogFileName() = 5;
     void attachLogPath(String logPath) = 6;
+    String requestFcmReconnect(String reason) = 7;
     void destroy() = 16777114;
 }

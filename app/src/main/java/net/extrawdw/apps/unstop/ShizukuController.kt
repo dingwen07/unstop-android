@@ -228,6 +228,37 @@ internal object ShizukuController {
         }.isSuccess
     }
 
+    fun requestFcmReconnect(context: Context, reason: String): Boolean {
+        val appContext = context.applicationContext
+        if (!UnstopStore.fcmConnectionProtectionEnabled(appContext)) return false
+        if (status() != ShizukuStatus.READY) {
+            PersistentLog.info(
+                appContext,
+                "Shizuku",
+                "Deferred FCM reconnect request; Shizuku is not ready",
+            )
+            return false
+        }
+        return runCatching {
+            withService(
+                context = appContext,
+                operation = "fcm-reconnect",
+                fcmProtectionEnabled = true,
+            ) { service ->
+                service.requestFcmReconnect(reason)
+            }
+        }.onSuccess { result ->
+            PersistentLog.debug(appContext, "Shizuku", result)
+        }.onFailure { error ->
+            PersistentLog.error(
+                appContext,
+                "Shizuku",
+                "Could not request FCM reconnect",
+                error,
+            )
+        }.isSuccess
+    }
+
     private fun <T> withService(
         context: Context,
         operation: String,

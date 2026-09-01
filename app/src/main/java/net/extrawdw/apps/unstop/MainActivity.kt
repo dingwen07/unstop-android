@@ -57,6 +57,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,6 +67,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -378,6 +380,23 @@ private fun MonitorScreen(
                                 )
                             },
                         )
+                        IntervalPicker(
+                            minutes = intervalMinutes,
+                            onMinutesChanged = {
+                                intervalMinutes = it
+                                UnstopStore.setIntervalMinutes(context, it)
+                                UnstopWorkScheduler.updateScheduled(
+                                    context,
+                                    source = "interval_changed",
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+            item {
+                Card {
+                    Column {
                         SwitchSettingRow(
                             icon = Icons.Outlined.Shield,
                             title = stringResource(R.string.fcm_connection_protection),
@@ -402,17 +421,6 @@ private fun MonitorScreen(
                                 fcmPollingIntervalMillis = intervalMillis
                                 UnstopStore.setFcmPollingIntervalMillis(context, intervalMillis)
                                 reconcileFcmProtection("polling_interval_changed")
-                            },
-                        )
-                        IntervalPicker(
-                            minutes = intervalMinutes,
-                            onMinutesChanged = {
-                                intervalMinutes = it
-                                UnstopStore.setIntervalMinutes(context, it)
-                                UnstopWorkScheduler.updateScheduled(
-                                    context,
-                                    source = "interval_changed",
-                                )
                             },
                         )
                     }
@@ -919,26 +927,49 @@ private fun ShizukuCard(
             Icons.Outlined.ErrorOutline,
         )
     }
-    Card {
+    val authorized = status == ShizukuStatus.READY
+    val containerColor = if (authorized) {
+        MaterialTheme.colorScheme.secondaryContainer
+    } else {
+        MaterialTheme.colorScheme.errorContainer
+    }
+    val contentColor = if (authorized) {
+        MaterialTheme.colorScheme.onSecondaryContainer
+    } else {
+        MaterialTheme.colorScheme.onErrorContainer
+    }
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = containerColor,
+            contentColor = contentColor,
+        ),
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(icon, contentDescription = null)
+            Icon(icon, contentDescription = null, tint = contentColor)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = contentColor,
+                )
                 Text(
                     description,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = contentColor,
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (status != ShizukuStatus.READY) {
-                    TextButton(onClick = onAction) {
+                    TextButton(
+                        onClick = onAction,
+                        colors = ButtonDefaults.textButtonColors(contentColor = contentColor),
+                    ) {
                         Text(
                             stringResource(
                                 if (status == ShizukuStatus.NOT_RUNNING) {
@@ -950,7 +981,10 @@ private fun ShizukuCard(
                         )
                     }
                 }
-                IconButton(onClick = onRefresh) {
+                IconButton(
+                    onClick = onRefresh,
+                    colors = IconButtonDefaults.iconButtonColors(contentColor = contentColor),
+                ) {
                     Icon(
                         Icons.Outlined.Refresh,
                         contentDescription = stringResource(R.string.refresh_shizuku_status),

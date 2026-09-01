@@ -19,6 +19,10 @@ internal class UnstopWorker(
             "Starting ${trigger.logName} work; id=$id, attempt=$runAttemptCount",
         )
         try {
+            ShizukuController.requestFcmReconnect(
+                applicationContext,
+                "workmanager:${trigger.logName}",
+            )
             val summary = if (trigger == UnstopTrigger.NETWORK_AVAILABLE) {
                 UnstopEngine.runIfLastCheckIsOlderThan(
                     applicationContext,

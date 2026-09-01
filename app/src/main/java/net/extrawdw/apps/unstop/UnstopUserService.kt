@@ -31,6 +31,7 @@ class UnstopUserService() : IUnstopService.Stub() {
     @Volatile
     private var fcmPollingIntervalMillis = FcmPollingInterval.DEFAULT_MILLIS
     private var cachedGmsUid: Int? = null
+    @Volatile
     private var nextMandatoryFcmReconnectElapsed = 0L
     private val serviceLogLock = Any()
     private val pendingServiceLogs = ArrayDeque<String>()
@@ -174,6 +175,19 @@ class UnstopUserService() : IUnstopService.Stub() {
         }
     }
 
+    override fun requestFcmReconnect(reason: String): String {
+        require(reason.isNotBlank()) { "FCM reconnect reason is blank" }
+        require(reason.length <= MAX_REASON_LENGTH) { "FCM reconnect reason is too long" }
+        check(
+            sendGcmReconnect(
+                SystemClock.elapsedRealtime(),
+                reason,
+                logSuccess = false,
+            ),
+        ) { "Could not request FCM reconnect" }
+        return "Requested FCM reconnect reason=$reason"
+    }
+
     @Synchronized
     override fun configureFcmConnectionProtection(
         enabled: Boolean,
@@ -305,7 +319,12 @@ class UnstopUserService() : IUnstopService.Stub() {
         return resolvedUid
     }
 
-    private fun sendGcmReconnect(nowElapsed: Long, reason: String) {
+    @Synchronized
+    private fun sendGcmReconnect(
+        nowElapsed: Long,
+        reason: String,
+        logSuccess: Boolean = true,
+    ): Boolean {
         val result = runSystemCommand(
             SystemServiceCommands.activity(
                 "broadcast",
@@ -321,7 +340,7 @@ class UnstopUserService() : IUnstopService.Stub() {
         if (result.succeeded) {
             nextMandatoryFcmReconnectElapsed =
                 FcmReconnectPolicy.nextMandatoryReconnectElapsed(nowElapsed)
-            if (reason != MANDATORY_RECONNECT_REASON) {
+            if (logSuccess && reason != MANDATORY_RECONNECT_REASON) {
                 serviceLog('I', "FCM", "requested GCM reconnect reason=$reason")
             }
         } else {
@@ -331,6 +350,7 @@ class UnstopUserService() : IUnstopService.Stub() {
                 "could not request GCM reconnect reason=$reason result=${result.summary}",
             )
         }
+        return result.succeeded
     }
 
     private fun serviceLog(level: Char, component: String, message: String) {
@@ -412,6 +432,7 @@ class UnstopUserService() : IUnstopService.Stub() {
         private const val FCM_COMMAND_TIMEOUT_SECONDS = 10L
         private const val MAX_OUTPUT_LENGTH = 64_000
         private const val MAX_PACKAGE_LIST_OUTPUT_LENGTH = 512_000
+        private const val MAX_REASON_LENGTH = 128
         private const val MAX_SERVICE_LOG_BYTES = 4L * 1024L * 1024L
         private const val MAX_PENDING_SERVICE_LOG_LINES = 256
         private const val OWNER_USER_ID = "0"
